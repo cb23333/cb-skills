@@ -1,0 +1,6 @@
+{
+  "eval_id": 1,
+  "eval_name": "todo-app-from-scratch",
+  "prompt": "Build a simple todo app from scratch with Flutter. Can add, complete, and delete tasks. Beginner level.",
+  "assertions": []
+}

@@ -1,0 +1,44 @@
+{
+  "skill_name": "flutter-app-dev",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我想做一个简单的待办事项 app，可以添加、完成和删除任务。我不太懂 Flutter，请帮我从零开始搭建。",
+      "expected_output": "Complete Flutter project setup with todo CRUD functionality, proper architecture, state management with Riverpod, and beginner-friendly explanations",
+      "files": [],
+      "assertions": [
+        {"name": "has_project_structure", "description": "Generates a reasonable project directory structure with lib/, core/, features/ etc."},
+        {"name": "uses_riverpod", "description": "Uses Riverpod for state management (flutter_riverpod dependency and provider patterns)"},
+        {"name": "has_crud_operations", "description": "Implements add, complete (toggle), and delete operations for todo items"},
+        {"name": "has_beginner_explanations", "description": "Includes explanations suitable for beginners (comments, descriptions of concepts)"},
+        {"name": "follows_feature_first", "description": "Uses feature-first directory organization"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "我的 Flutter app 已经有首页了，现在需要加一个登录注册功能，用邮箱密码登录，连接到 REST API。",
+      "expected_output": "Authentication feature with login/register screens, API integration via Dio, token storage, auth state management, route guards, and proper error handling",
+      "files": [],
+      "assertions": [
+        {"name": "has_login_register_screens", "description": "Creates both login and registration screen widgets"},
+        {"name": "uses_dio_for_api", "description": "Uses Dio for HTTP API calls"},
+        {"name": "has_token_storage", "description": "Implements secure token storage (shared_preferences or flutter_secure_storage)"},
+        {"name": "has_auth_guard", "description": "Has route guard / redirect logic for protecting authenticated routes"},
+        {"name": "handles_errors", "description": "Handles loading, error, and success states for auth operations"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "我的 Flutter 商品列表页面滑动很卡，数据很多的时候特别明显。我看代码用了 ListView 而不是 builder，能帮我优化一下吗？",
+      "expected_output": "Performance diagnosis and optimization with ListView.builder, image caching, const widgets, pagination, and clear explanation of why each fix helps",
+      "files": [],
+      "assertions": [
+        {"name": "uses_listview_builder", "description": "Recommends or uses ListView.builder instead of plain ListView"},
+        {"name": "uses_const_widgets", "description": "Suggests using const constructors for widget optimization"},
+        {"name": "explains_why", "description": "Explains WHY each optimization helps, not just WHAT to change"},
+        {"name": "suggests_pagination", "description": "Suggests pagination or lazy loading for large datasets"},
+        {"name": "has_image_caching", "description": "Mentions image caching (cached_network_image or similar)"}
+      ]
+    }
+  ]
+}

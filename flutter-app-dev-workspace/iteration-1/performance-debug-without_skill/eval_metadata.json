@@ -1,0 +1,6 @@
+{
+  "eval_id": 3,
+  "eval_name": "performance-debug",
+  "prompt": "Optimize a laggy Flutter product list page. Currently uses plain ListView instead of builder.",
+  "assertions": []
+}

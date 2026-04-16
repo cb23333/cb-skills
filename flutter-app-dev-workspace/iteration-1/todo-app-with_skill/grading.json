@@ -1,0 +1,31 @@
+{
+  "eval_name": "todo-app-from-scratch",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "has_project_structure",
+      "passed": true,
+      "evidence": "Project has lib/, lib/core/ (with router/, theme/), lib/features/ (with todo/data, todo/domain, todo/presentation/widgets), lib/shared/widgets/, test/, pubspec.yaml, analysis_options.yaml, and README.md -- a well-organized Flutter project structure."
+    },
+    {
+      "text": "uses_riverpod",
+      "passed": true,
+      "evidence": "pubspec.yaml declares 'flutter_riverpod: ^2.5.0'. main.dart wraps the app in ProviderScope. The app uses AsyncNotifierProvider, StateProvider, Provider, ConsumerWidget, ConsumerStatefulWidget, and ConsumerRef throughout the codebase."
+    },
+    {
+      "text": "has_crud_operations",
+      "passed": true,
+      "evidence": "todo_provider.dart implements addTodo(), toggleTodo() (for completing), and deleteTodo() methods in TodoListNotifier. The UI wires these up: AddTodoDialog calls addTodo, TodoItem's Checkbox calls toggleTodo, and Dismissible swipe calls deleteTodo."
+    },
+    {
+      "text": "has_beginner_explanations",
+      "passed": true,
+      "evidence": "Every file includes doc comments explaining its purpose (e.g., '/// Async notifier that manages the full todo list with persistence', '/// A single todo item displayed as a dismissible card' with usage instructions). todo_model.dart explicitly explains the choice of plain Dart class over freezed: 'Since this is a simple app, we use a plain Dart class instead of freezed-generated code. This avoids the build_runner step while still keeping the model immutable.' The summary.md provides a clear overview of architecture decisions and a step-by-step 'How to Run' section."
+    },
+    {
+      "text": "follows_feature_first",
+      "passed": true,
+      "evidence": "Directory structure is organized by feature first: lib/features/todo/ contains data/, domain/, and presentation/ subdirectories. Additionally lib/core/ holds cross-cutting concerns (router, theme) and lib/shared/widgets/ holds reusable components. This is a classic feature-first architecture."
+    }
+  ]
+}

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "flutter-app-dev", "runs": [{"id": "todo-app-with_skill", "prompt": "Build a simple todo app from scratch with Flutter. Can add, complete, and delete tasks. Beginner level.", "eval_id": 1, "outputs": [{"name": "summary.md", "type": "text", "content": "# Todo App - Build Summary\n\n## Overview\n\nCreated a complete, runnable Flutter todo app from scratch following the flutter-app-dev skill's guidance. The app supports adding, completing, editing, and deleting tasks with persistent local storage.\n\n## Architecture Decision\n\nPer the skill's complexity table, this is a **simple app** (< 5 screens), so we chose:\n- **State Management**: Riverpod (flutter_riverpod)\n- **Architecture**: Feature-first flat structure\n- **Routing**: GoRouter (single route, no nesting needed)\n- **No code generation**: Plain Dart classes instead of freezed, avoiding the build_runner step for a beginner-friendly setup\n\n## Files Created\n\n### Core Infrastructure\n| File | Purpose |\n|------|---------|\n| `todo_app/pubspec.yaml` | Project config and dependencies |\n| `todo_app/analysis_options.yaml` | Lint rules |\n| `todo_app/lib/main.dart` | App entry point with ProviderScope |\n| `todo_app/lib/app.dart` | MaterialApp.router configuration |\n| `todo_app/lib/core/theme/app_theme.dart` | Material 3 light/dark theme |\n| `todo_app/lib/core/router/app_router.dart` | GoRouter with single route |\n\n### Feature: Todo\n| File | Purpose |\n|------|---------|\n| `lib/features/todo/data/todo_model.dart` | Immutable TodoModel with JSON serialization |\n| `lib/features/todo/data/todo_repository.dart` | SharedPreferences-based persistence |\n| `lib/features/todo/domain/todo_provider.dart` | Riverpod providers: TodoListNotifier, filter, counts |\n| `lib/features/todo/presentation/todo_screen.dart` | Main screen with list, FAB, empty state |\n| `lib/features/todo/presentation/widgets/add_todo_dialog.dart` | Dialog for adding new tasks |\n| `lib/features/todo/presentation/widgets/todo_item.dart` | Dismissible list tile with checkbox, edit |\n| `lib/features/todo/presentation/widgets/todo_filter_bar.dart` | FilterChip row (All/Active/Completed) |\n\n### Shared Widgets\n| File | Purpose |\n|------|---------|\n| `lib/shared/widgets/empty_state.dart` | Reusable empty state component |\n| `lib/shared/widgets/error_view.dart` | Reusable error view with retry |\n\n### Tests\n| File | Purpose |\n|------|---------|\n| `test/features/todo/domain/todo_provider_test.dart` | Unit tests for TodoModel |\n| `test/features/todo/domain/widget_test.dart` | Widget test for app rendering |\n\n### Documentation\n| File | Purpose |\n|------|---------|\n| `todo_app/README.md` | Setup and usage instructions |\n\n## App Features\n1. **Add tasks** - Floating action button opens a dialog to enter a task title\n2. **Complete tasks** - Tap the checkbox to toggle completion status (with strikethrough styling)\n3. **Delete tasks** - Swipe right-to-left to dismiss/delete with undo via SnackBar\n4. **Edit tasks** - Tap the edit icon to modify the task title\n5. **Filter tasks** - Filter between All, Active, and Completed\n6. **Persistence** - All tasks are saved to SharedPreferences and survive app restarts\n7. **Clear completed** - Button in the app bar removes all completed tasks\n8. **Empty state** - Helpful message when no tasks match the current filter\n9. **Error handling** - AsyncValue.when() pattern for loading/data/error states\n10. **Material 3** - Modern theming with light and dark mode\n\n## How to Run\n```bash\ncd todo_app\nflutter pub get\nflutter run\n```\n\n## Dependencies\n- `flutter_riverpod: ^2.5.0` - State management\n- `go_router: ^14.0.0` - Declarative routing\n- `shared_preferences: ^2.2.0` - Local key-value storage\n- `uuid: ^4.3.0` - Unique ID generation for tasks\n"}], "grading": {"eval_name": "todo-app-from-scratch", "configuration": "with_skill", "expectations": [{"text": "has_project_structure", "passed": true, "evidence": "Project has lib/, lib/core/ (with router/, theme/), lib/features/ (with todo/data, todo/domain, todo/presentation/widgets), lib/shared/widgets/, test/, pubspec.yaml, analysis_options.yaml, and README.md -- a well-organized Flutter project structure."}, {"text": "uses_riverpod", "passed": true, "evidence": "pubspec.yaml declares 'flutter_riverpod: ^2.5.0'. main.dart wraps the app in ProviderScope. The app uses AsyncNotifierProvider, StateProvider, Provider, ConsumerWidget, ConsumerStatefulWidget, and ConsumerRef throughout the codebase."}, {"text": "has_crud_operations", "passed": true, "evidence": "todo_provider.dart implements addTodo(), toggleTodo() (for completing), and deleteTodo() methods in TodoListNotifier. The UI wires these up: AddTodoDialog calls addTodo, TodoItem's Checkbox calls toggleTodo, and Dismissible swipe calls deleteTodo."}, {"text": "has_beginner_explanations", "passed": true, "evidence": "Every file includes doc comments explaining its purpose (e.g., '/// Async notifier that manages the full todo list with persistence', '/// A single todo item displayed as a dismissible card' with usage instructions). todo_model.dart explicitly explains the choice of plain Dart class over freezed: 'Since this is a simple app, we use a plain Dart class instead of freezed-generated code. This avoids the build_runner step while still keeping the model immutable.' The summary.md provides a clear overview of architecture decisions and a step-by-step 'How to Run' section."}, {"text": "follows_feature_first", "passed": true, "evidence": "Directory structure is organized by feature first: lib/features/todo/ contains data/, domain/, and presentation/ subdirectories. Additionally lib/core/ holds cross-cutting concerns (router, theme) and lib/shared/widgets/ holds reusable components. This is a classic feature-first architecture."}]}}, {"id": "todo-app-without_skill", "prompt": "Build a simple todo app from scratch with Flutter. Can add, complete, and delete tasks. Beginner level.", "eval_id": 1, "outputs": [{"name": "summary.md", "type": "text", "content": "# Summary: Flutter Todo App (Baseline - Without Skill)\n\n## Project Overview\n\nA simple Flutter todo application that supports adding, completing, and deleting tasks. Built from scratch without any specialized skill guidance, using general Flutter knowledge.\n\n## Output Files\n\nAll files are saved to `D:\\Program\\cb-skills\\flutter-app-dev-workspace\\iteration-1\\todo-app-without_skill\\outputs\\todo_app\\`.\n\n## Project Structure\n\n```\ntodo_app/\n  pubspec.yaml                # Project config and dependencies\n  analysis_options.yaml       # Dart linting rules\n  lib/\n    main.dart                 # App entry point, TodoApp root widget\n    models/\n      todo.dart               # Todo data model with id, title, isCompleted, createdAt\n    screens/\n      home_screen.dart        # Main screen: task list, filter chips, FAB\n    widgets/\n      todo_item.dart          # Single task card with checkbox, swipe-to-delete\n      add_todo_dialog.dart    # Dialog for entering a new task name\n  test/\n    widget_test.dart          # Basic widget tests for adding tasks and validation\n  SETUP.md                    # Setup and run instructions\n```\n\n## Key Design Decisions\n\n1. **State Management**: Used basic `setState` for simplicity since the app is small and doesn't need complex state management.\n\n2. **Architecture**: Organized into `models/`, `screens/`, and `widgets/` directories following common Flutter conventions.\n\n3. **Features Implemented**:\n   - Add tasks via a popup dialog with text validation\n   - Toggle task completion with a checkbox\n   - Delete tasks via swipe-to-dismiss or a delete icon button\n   - Filter tasks by All / Active / Completed using FilterChip widgets\n   - Display task count and relative timestamps\n   - Empty state with contextual messages per filter\n\n4. **UI Style**: Material Design 3 with a blue seed color, rounded card borders, and clean layout.\n\n5. **Data Model**: The `Todo` class includes `id`, `title`, `isCompleted`, and `createdAt` fields, with `toMap`/`fromMap` methods ready for future persistence integration.\n\n## Limitations\n\n- No data persistence (tasks are lost when the app closes)\n- No local storage, database, or shared preferences integration\n- Uses basic setState instead of more scalable state management\n- No undo functionality for deleted tasks\n- No task editing capability\n- No task categories or priority levels\n\n## How to Run\n\n1. Ensure Flutter SDK is installed (`flutter doctor` passes)\n2. Copy the `todo_app/` folder or run `flutter create todo_app` and replace files\n3. Run `flutter pub get`\n4. Run `flutter run` on a connected device or emulator\n"}], "grading": {"eval_name": "todo-app-from-scratch", "configuration": "without_skill", "expectations": [{"text": "has_project_structure - Does it generate a reasonable project directory structure with lib/, core/, features/ etc.?", "passed": true, "evidence": "Project has a reasonable Flutter directory structure with lib/, lib/models/, lib/screens/, lib/widgets/, test/, plus pubspec.yaml and analysis_options.yaml. It does not have core/ or features/ directories specifically, but the models/screens/widgets organization is a standard and reasonable Flutter project structure."}, {"text": "uses_riverpod - Does it use Riverpod for state management?", "passed": false, "evidence": "State management is done entirely with basic setState. pubspec.yaml has no Riverpod dependency. Summary explicitly states: 'Used basic setState for simplicity since the app is small and doesn't need complex state management.'"}, {"text": "has_crud_operations - Does it implement add, complete (toggle), and delete operations for todo items?", "passed": true, "evidence": "home_screen.dart contains _addTodo() (inserts new Todo into list), _toggleTodo() (calls todo.toggleComplete()), and _deleteTodo() (removes by id with setState). The Todo model has toggleComplete(). TodoItem widget supports checkbox toggle, swipe-to-dismiss delete, and icon button delete."}, {"text": "has_beginner_explanations - Does it include explanations suitable for beginners?", "passed": true, "evidence": "SETUP.md provides step-by-step instructions including prerequisites, quick start with explicit commands (flutter create, flutter pub get, flutter run), project structure explanation, feature list, and troubleshooting. Code files include doc comments like '/// Represents a single todo task', '/// The main home screen displaying the list of todos', '/// Toggle the completion status of the todo'."}, {"text": "follows_feature_first - Does it use feature-first directory organization?", "passed": false, "evidence": "The project uses a layer-first (type-first) directory organization: lib/models/, lib/screens/, lib/widgets/. There is no features/ directory or feature-based grouping. Summary confirms: 'Organized into models/, screens/, and widgets/ directories following common Flutter conventions.'"}]}}, {"id": "auth-feature-with_skill", "prompt": "Add login/register with email+password to an existing Flutter app, connecting to a REST API.", "eval_id": 2, "outputs": [{"name": "app.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,aW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvbWF0ZXJpYWwuZGFydCc7CmltcG9ydCAncGFja2FnZTpmbHV0dGVyX3JpdmVycG9kL2ZsdXR0ZXJfcml2ZXJwb2QuZGFydCc7CmltcG9ydCAnY29yZS9yb3V0ZXIvYXBwX3JvdXRlci5kYXJ0JzsKCi8vLyBSb290IHdpZGdldCB0aGF0IHdpcmVzIHRvZ2V0aGVyIHRoZW1lLCByb3V0ZXIsIGFuZCBwcm92aWRlcnMuCi8vLwovLy8gVG8gaW50ZWdyYXRlIGF1dGggaW50byB5b3VyIGV4aXN0aW5nIGFwcCwgbWVyZ2UgdGhlIHByb3ZpZGVyIG92ZXJyaWRlcwovLy8gZnJvbSBbc2V0dXBBdXRoT3ZlcnJpZGVzKCldIGludG8geW91ciBleGlzdGluZyBQcm92aWRlclNjb3BlLgpjbGFzcyBNeUFwcCBleHRlbmRzIENvbnN1bWVyV2lkZ2V0IHsKICBjb25zdCBNeUFwcCh7c3VwZXIua2V5fSk7CgogIEBvdmVycmlkZQogIFdpZGdldCBidWlsZChCdWlsZENvbnRleHQgY29udGV4dCwgV2lkZ2V0UmVmIHJlZikgewogICAgZmluYWwgcm91dGVyID0gcmVmLndhdGNoKHJvdXRlclByb3ZpZGVyKTsKCiAgICByZXR1cm4gTWF0ZXJpYWxBcHAucm91dGVyKAogICAgICB0aXRsZTogJ015IEFwcCcsCiAgICAgIC8vIFRPRE86IFJlcGxhY2Ugd2l0aCB5b3VyIEFwcFRoZW1lIGltcG9ydAogICAgICAvLyB0aGVtZTogQXBwVGhlbWUubGlnaHQsCiAgICAgIC8vIGRhcmtUaGVtZTogQXBwVGhlbWUuZGFyaywKICAgICAgcm91dGVyQ29uZmlnOiByb3V0ZXIsCiAgICApOwogIH0KfQo="}, {"name": "main.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,aW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvbWF0ZXJpYWwuZGFydCc7CmltcG9ydCAncGFja2FnZTpmbHV0dGVyX3JpdmVycG9kL2ZsdXR0ZXJfcml2ZXJwb2QuZGFydCc7CmltcG9ydCAnY29yZS9uZXR3b3JrL2FwaV9jbGllbnQuZGFydCc7CmltcG9ydCAnY29yZS9zdG9yYWdlL2xvY2FsX3N0b3JhZ2UuZGFydCc7CmltcG9ydCAnY29yZS9yb3V0ZXIvYXBwX3JvdXRlci5kYXJ0JzsKaW1wb3J0ICdhcHAuZGFydCc7Cgp2b2lkIG1haW4oKSB7CiAgV2lkZ2V0c0ZsdXR0ZXJCaW5kaW5nLmVuc3VyZUluaXRpYWxpemVkKCk7CiAgcnVuQXBwKAogICAgUHJvdmlkZXJTY29wZSgKICAgICAgb3ZlcnJpZGVzOiBbCiAgICAgICAgLy8gQXV0aCBmZWF0dXJlIGRlcGVuZGVuY2llcyBhcmUgd2lyZWQgdGhyb3VnaCB0aGUgY29yZSBwcm92aWRlcnMuCiAgICAgICAgLy8gVGhlIHJvdXRlciBhbmQgYXV0aF9wcm92aWRlciByZWZlcmVuY2Ugc3RvcmFnZVByb3ZpZGVyIGFuZCBkaW9Qcm92aWRlcgogICAgICAgIC8vIGZyb20gY29yZS8sIHNvIG5vIGFkZGl0aW9uYWwgb3ZlcnJpZGVzIGFyZSBuZWVkZWQuCiAgICAgIF0sCiAgICAgIGNoaWxkOiBjb25zdCBNeUFwcCgpLAogICAgKSwKICApOwp9Cg=="}, {"name": "summary.md", "type": "text", "content": "# Auth Feature Summary\n\n## What was produced\n\nA complete authentication feature for a Flutter app using **Riverpod + GoRouter + Dio**, following the `flutter-app-dev` skill's feature-first architecture (data -> domain -> presentation layers).\n\n## Files Created\n\n### Feature Layer: `features/auth/`\n\n| File | Purpose |\n|------|---------|\n| `data/auth_model.dart` | Freezed data models: `AuthResponse`, `UserModel`, `LoginRequest`, `RegisterRequest` |\n| `data/auth_repository.dart` | API calls: login, register, getProfile, logout (via Dio) |\n| `data/auth_providers.dart` | Provider for `AuthRepository` with Dio dependency |\n| `domain/auth_state.dart` | Freezed state class: `AuthState.authenticated`, `.unauthenticated`, `.initial` |\n| `domain/auth_provider.dart` | `AuthNotifier` (AsyncNotifier) managing login/register/logout lifecycle + token storage |\n| `presentation/login_screen.dart` | Login UI with email/password form, validation, loading state, error feedback |\n| `presentation/register_screen.dart` | Registration UI with name/email/password/confirm fields, validation |\n\n### Core Infrastructure: `core/`\n\n| File | Purpose |\n|------|---------|\n| `network/api_client.dart` | Dio provider with `AuthInterceptor` (auto-attaches Bearer token, handles 401) |\n| `network/api_exceptions.dart` | `ApiException` with user-friendly error messages for all HTTP status codes |\n| `storage/local_storage.dart` | SharedPreferences-based token storage (`getToken`, `saveToken`, `deleteToken`) |\n| `router/app_router.dart` | GoRouter with auth-based redirect guard, login/register/home routes |\n\n### App Entry\n\n| File | Purpose |\n|------|---------|\n| `app.dart` | Root `ConsumerWidget` wiring router to `MaterialApp.router` |\n| `main.dart` | Entry point with `ProviderScope` |\n\n## Architecture\n\n```\nfeatures/auth/\n  data/       -> API models (freezed), repository (Dio HTTP calls)\n  domain/     -> AuthState (freezed), AuthNotifier (Riverpod AsyncNotifier)\n  presentation/ -> LoginScreen, RegisterScreen (ConsumerStatefulWidget)\ncore/\n  network/    -> Dio client, auth interceptor, API exceptions\n  storage/    -> LocalStorage (SharedPreferences token persistence)\n  router/     -> GoRouter with auth redirect guard\n```\n\n## How to Integrate into Your Existing App\n\n1. **Copy the `features/auth/` directory** into your `lib/features/` directory.\n\n2. **Copy the `core/` files** into your `lib/core/` directory. If you already have `api_client.dart` or `local_storage.dart`, merge the auth-related code into your existing files.\n\n3. **Update your `pubspec.yaml`** with required dependencies:\n   ```yaml\n   dependencies:\n     flutter_riverpod: ^2.5.0\n     go_router: ^14.0.0\n     dio: ^5.4.0\n     freezed_annotation: ^2.4.0\n     json_annotation: ^4.9.0\n     shared_preferences: ^2.2.0\n\n   dev_dependencies:\n     build_runner: ^2.4.0\n     freezed: ^2.5.0\n     json_serializable: ^6.8.0\n   ```\n\n4. **Run code generation** (for freezed models):\n   ```bash\n   dart run build_runner build --delete-conflicting-outputs\n   ```\n\n5. **Update your router** to use `routerProvider` from `core/router/app_router.dart`, or copy the redirect logic and routes into your existing router.\n\n6. **Set your API base URL** in `core/network/api_client.dart` (replace `https://api.example.com`).\n\n## Auth Flow\n\n1. App starts -> `AuthNotifier.build()` checks local storage for a saved token.\n2. If token exists -> state is `authenticated`, router allows access to protected routes.\n3. If no token -> state is `unauthenticated`, router redirects to `/login`.\n4. User logs in or registers -> API call -> token saved to storage -> state becomes `authenticated`.\n5. All subsequent API calls include `Authorization: Bearer <token>` via the interceptor.\n6. If a 401 response is received -> interceptor forces logout -> user returns to login screen.\n\n## API Endpoints Expected\n\n| Endpoint | Method | Body | Response |\n|----------|--------|------|----------|\n| `/auth/login` | POST | `{ email, password }` | `{ token, user: { id, email, name, ... } }` |\n| `/auth/register` | POST | `{ name, email, password, password_confirmation }` | `{ token, user: { id, email, name, ... } }` |\n| `/auth/me` | GET | - | `{ id, email, name, ... }` |\n| `/auth/logout` | POST | - | - |\n\nAdjust the endpoint paths and response shapes in `auth_repository.dart` to match your actual backend API.\n"}], "grading": {"eval_name": "auth-feature", "configuration": "with_skill", "expectations": [{"text": "has_login_register_screens", "passed": true, "evidence": "Two separate screen widgets exist: LoginScreen in presentation/login_screen.dart with email/password form, and RegisterScreen in presentation/register_screen.dart with name/email/password/confirm fields. Both extend ConsumerStatefulWidget."}, {"text": "uses_dio_for_api", "passed": true, "evidence": "api_client.dart provides a configured Dio instance via dioProvider with BaseOptions and AuthInterceptor. AuthRepository in auth_repository.dart uses Dio for all HTTP calls: _dio.post('/auth/login', ...), _dio.post('/auth/register', ...), _dio.get('/auth/me'), _dio.post('/auth/logout')."}, {"text": "has_token_storage", "passed": true, "evidence": "core/storage/local_storage.dart implements a LocalStorage class using SharedPreferences with getToken(), saveToken(), deleteToken(), getRefreshToken(), and saveRefreshToken() methods. AuthNotifier reads and persists tokens via the StorageService interface."}, {"text": "has_auth_guard", "passed": true, "evidence": "app_router.dart uses GoRouter with a redirect callback: 'if (!isLoggedIn && !isAuthRoute) return \"/login\"' redirects unauthenticated users to login, and 'if (isLoggedIn && isAuthRoute) return \"/\"' redirects authenticated users away from auth pages. A 401 response in AuthInterceptor also triggers logout."}, {"text": "handles_errors", "passed": true, "evidence": "Loading: both screens check authAsync.isLoading to disable buttons and show CircularProgressIndicator. Error: screens use ref.listen to show SnackBar on errors; api_exceptions.dart maps all DioExceptionType variants and HTTP status codes (400-500) to user-friendly messages. Success: AsyncValue.guard in AuthNotifier wraps login/register calls, transitioning state to authenticated on success."}]}}, {"id": "auth-feature-without_skill", "prompt": "Add login/register with email+password to an existing Flutter app, connecting to a REST API.", "eval_id": 2, "outputs": [{"name": "api_contracts.md", "type": "text", "content": "# Auth API Contracts\n\nThis document describes the expected REST API endpoints that the auth feature communicates with.\n\n## Base URL\n\nConfigure in `AuthService._baseUrl` (defaults to `https://your-api.example.com/api`).\n\n---\n\n## POST /auth/login\n\nLogin with email and password.\n\n**Request Body:**\n```json\n{\n  \"email\": \"user@example.com\",\n  \"password\": \"secret123\"\n}\n```\n\n**Success Response (200):**\n```json\n{\n  \"data\": {\n    \"id\": \"abc123\",\n    \"email\": \"user@example.com\",\n    \"name\": \"John Doe\",\n    \"token\": \"eyJhbGciOiJIUzI1NiIs...\"\n  }\n}\n```\n\n**Error Response (401 / 400):**\n```json\n{\n  \"message\": \"Invalid email or password\"\n}\n```\n\n---\n\n## POST /auth/register\n\nRegister a new account.\n\n**Request Body:**\n```json\n{\n  \"name\": \"John Doe\",\n  \"email\": \"user@example.com\",\n  \"password\": \"secret123\"\n}\n```\n\n**Success Response (201):**\n```json\n{\n  \"data\": {\n    \"id\": \"abc123\",\n    \"email\": \"user@example.com\",\n    \"name\": \"John Doe\",\n    \"token\": \"eyJhbGciOiJIUzI1NiIs...\"\n  }\n}\n```\n\n**Error Response (400 / 409):**\n```json\n{\n  \"message\": \"Email already in use\"\n}\n```\n\n---\n\n## POST /auth/logout\n\nInvalidate the current token.\n\n**Headers:**\n```\nAuthorization: Bearer <token>\n```\n\n**Success Response (200):**\n```json\n{\n  \"message\": \"Logged out\"\n}\n```\n\n---\n\n## GET /auth/me\n\nValidate the current token and get user info.\n\n**Headers:**\n```\nAuthorization: Bearer <token>\n```\n\n**Success Response (200):**\n```json\n{\n  \"data\": {\n    \"id\": \"abc123\",\n    \"email\": \"user@example.com\",\n    \"name\": \"John Doe\"\n  }\n}\n```\n\n**Error Response (401):**\n```json\n{\n  \"message\": \"Invalid or expired token\"\n}\n```\n"}, {"name": "auth_provider.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,aW1wb3J0ICdkYXJ0OmFzeW5jJzsKaW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvZm91bmRhdGlvbi5kYXJ0JzsKaW1wb3J0ICdwYWNrYWdlOnNoYXJlZF9wcmVmZXJlbmNlcy9zaGFyZWRfcHJlZmVyZW5jZXMuZGFydCc7CgppbXBvcnQgJ2F1dGhfc2VydmljZS5kYXJ0JzsKaW1wb3J0ICd1c2VyX21vZGVsLmRhcnQnOwoKLy8vIE1hbmFnZXMgYXV0aGVudGljYXRpb24gc3RhdGUgdGhyb3VnaG91dCB0aGUgYXBwIGxpZmVjeWNsZS4KY2xhc3MgQXV0aFByb3ZpZGVyIGV4dGVuZHMgQ2hhbmdlTm90aWZpZXIgewogIGZpbmFsIEF1dGhTZXJ2aWNlIF9hdXRoU2VydmljZTsKCiAgVXNlck1vZGVsPyBfdXNlcjsKICBib29sIF9pc0xvYWRpbmcgPSBmYWxzZTsKICBTdHJpbmc/IF9lcnJvcjsKCiAgQXV0aFByb3ZpZGVyKHtBdXRoU2VydmljZT8gYXV0aFNlcnZpY2V9KQogICAgICA6IF9hdXRoU2VydmljZSA9IGF1dGhTZXJ2aWNlID8/IEF1dGhTZXJ2aWNlKCk7CgogIC8vIC0tIEdldHRlcnMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCiAgLy8vIFRoZSBjdXJyZW50bHkgYXV0aGVudGljYXRlZCB1c2VyLCBvciBudWxsIGlmIG5vdCBsb2dnZWQgaW4uCiAgVXNlck1vZGVsPyBnZXQgdXNlciA9PiBfdXNlcjsKCiAgLy8vIFdoZXRoZXIgYW4gYXV0aCBvcGVyYXRpb24gaXMgaW4gcHJvZ3Jlc3MuCiAgYm9vbCBnZXQgaXNMb2FkaW5nID0+IF9pc0xvYWRpbmc7CgogIC8vLyBUaGUgbW9zdCByZWNlbnQgZXJyb3IgbWVzc2FnZSwgb3IgbnVsbC4KICBTdHJpbmc/IGdldCBlcnJvciA9PiBfZXJyb3I7CgogIC8vLyBXaGV0aGVyIHRoZSB1c2VyIGlzIGN1cnJlbnRseSBhdXRoZW50aWNhdGVkLgogIGJvb2wgZ2V0IGlzQXV0aGVudGljYXRlZCA9PiBfdXNlciAhPSBudWxsOwoKICAvLyAtLSBQdWJsaWMgQVBJIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgogIC8vLyBBdHRlbXB0IHRvIGxvZ2luIHdpdGggW2VtYWlsXSBhbmQgW3Bhc3N3b3JkXS4KICBGdXR1cmU8Ym9vbD4gbG9naW4oU3RyaW5nIGVtYWlsLCBTdHJpbmcgcGFzc3dvcmQpIGFzeW5jIHsKICAgIF9zZXRMb2FkaW5nKHRydWUpOwogICAgX2NsZWFyRXJyb3IoKTsKCiAgICB0cnkgewogICAgICBmaW5hbCB1c2VyID0gYXdhaXQgX2F1dGhTZXJ2aWNlLmxvZ2luKGVtYWlsOiBlbWFpbCwgcGFzc3dvcmQ6IHBhc3N3b3JkKTsKICAgICAgX3VzZXIgPSB1c2VyOwogICAgICBhd2FpdCBfcGVyc2lzdFRva2VuKHVzZXIudG9rZW4pOwogICAgICBfc2V0TG9hZGluZyhmYWxzZSk7CiAgICAgIG5vdGlmeUxpc3RlbmVycygpOwogICAgICByZXR1cm4gdHJ1ZTsKICAgIH0gb24gQXV0aEV4Y2VwdGlvbiBjYXRjaCAoZSkgewogICAgICBfZXJyb3IgPSBlLm1lc3NhZ2U7CiAgICAgIF9zZXRMb2FkaW5nKGZhbHNlKTsKICAgICAgbm90aWZ5TGlzdGVuZXJzKCk7CiAgICAgIHJldHVybiBmYWxzZTsKICAgIH0gY2F0Y2ggKGUpIHsKICAgICAgX2Vycm9yID0gJ0FuIHVuZXhwZWN0ZWQgZXJyb3Igb2NjdXJyZWQuIFBsZWFzZSB0cnkgYWdhaW4uJzsKICAgICAgX3NldExvYWRpbmcoZmFsc2UpOwogICAgICBub3RpZnlMaXN0ZW5lcnMoKTsKICAgICAgcmV0dXJuIGZhbHNlOwogICAgfQogIH0KCiAgLy8vIEF0dGVtcHQgdG8gcmVnaXN0ZXIgd2l0aCBbbmFtZV0sIFtlbWFpbF0sIGFuZCBbcGFzc3dvcmRdLgogIEZ1dHVyZTxib29sPiByZWdpc3RlcihTdHJpbmcgbmFtZSwgU3RyaW5nIGVtYWlsLCBTdHJpbmcgcGFzc3dvcmQpIGFzeW5jIHsKICAgIF9zZXRMb2FkaW5nKHRydWUpOwogICAgX2NsZWFyRXJyb3IoKTsKCiAgICB0cnkgewogICAgICBmaW5hbCB1c2VyID0gYXdhaXQgX2F1dGhTZXJ2aWNlLnJlZ2lzdGVyKAogICAgICAgIG5hbWU6IG5hbWUsCiAgICAgICAgZW1haWw6IGVtYWlsLAogICAgICAgIHBhc3N3b3JkOiBwYXNzd29yZCwKICAgICAgKTsKICAgICAgX3VzZXIgPSB1c2VyOwogICAgICBhd2FpdCBfcGVyc2lzdFRva2VuKHVzZXIudG9rZW4pOwogICAgICBfc2V0TG9hZGluZyhmYWxzZSk7CiAgICAgIG5vdGlmeUxpc3RlbmVycygpOwogICAgICByZXR1cm4gdHJ1ZTsKICAgIH0gb24gQXV0aEV4Y2VwdGlvbiBjYXRjaCAoZSkgewogICAgICBfZXJyb3IgPSBlLm1lc3NhZ2U7CiAgICAgIF9zZXRMb2FkaW5nKGZhbHNlKTsKICAgICAgbm90aWZ5TGlzdGVuZXJzKCk7CiAgICAgIHJldHVybiBmYWxzZTsKICAgIH0gY2F0Y2ggKGUpIHsKICAgICAgX2Vycm9yID0gJ0FuIHVuZXhwZWN0ZWQgZXJyb3Igb2NjdXJyZWQuIFBsZWFzZSB0cnkgYWdhaW4uJzsKICAgICAgX3NldExvYWRpbmcoZmFsc2UpOwogICAgICBub3RpZnlMaXN0ZW5lcnMoKTsKICAgICAgcmV0dXJuIGZhbHNlOwogICAgfQogIH0KCiAgLy8vIExvZ291dCB0aGUgY3VycmVudCB1c2VyLgogIEZ1dHVyZTx2b2lkPiBsb2dvdXQoKSBhc3luYyB7CiAgICBhd2FpdCBfYXV0aFNlcnZpY2UubG9nb3V0KF91c2VyPy50b2tlbik7CiAgICBfdXNlciA9IG51bGw7CiAgICBhd2FpdCBfY2xlYXJQZXJzaXN0ZWRUb2tlbigpOwogICAgbm90aWZ5TGlzdGVuZXJzKCk7CiAgfQoKICAvLy8gVHJ5IHRvIHJlc3RvcmUgYSBwcmV2aW91c2x5IHNhdmVkIHNlc3Npb24gb24gYXBwIHN0YXJ0LgogIEZ1dHVyZTx2b2lkPiB0cnlBdXRvTG9naW4oKSBhc3luYyB7CiAgICBfc2V0TG9hZGluZyh0cnVlKTsKICAgIF9jbGVhckVycm9yKCk7CgogICAgdHJ5IHsKICAgICAgZmluYWwgcHJlZnMgPSBhd2FpdCBTaGFyZWRQcmVmZXJlbmNlcy5nZXRJbnN0YW5jZSgpOwogICAgICBmaW5hbCB0b2tlbiA9IHByZWZzLmdldFN0cmluZygnYXV0aF90b2tlbicpOwogICAgICBpZiAodG9rZW4gPT0gbnVsbCkgewogICAgICAgIF9zZXRMb2FkaW5nKGZhbHNlKTsKICAgICAgICByZXR1cm47CiAgICAgIH0KCiAgICAgIGZpbmFsIHVzZXIgPSBhd2FpdCBfYXV0aFNlcnZpY2UudmFsaWRhdGVUb2tlbih0b2tlbik7CiAgICAgIF91c2VyID0gdXNlcjsKICAgICAgX3NldExvYWRpbmcoZmFsc2UpOwogICAgICBub3RpZnlMaXN0ZW5lcnMoKTsKICAgIH0gY2F0Y2ggKF8pIHsKICAgICAgLy8gVG9rZW4gaXMgaW52YWxpZCBvciBleHBpcmVkIC0gY2xlYXIgaXQgc2lsZW50bHkuCiAgICAgIGF3YWl0IF9jbGVhclBlcnNpc3RlZFRva2VuKCk7CiAgICAgIF9zZXRMb2FkaW5nKGZhbHNlKTsKICAgIH0KICB9CgogIC8vLyBDbGVhciB0aGUgY3VycmVudCBlcnJvciBtZXNzYWdlLgogIHZvaWQgY2xlYXJFcnJvcigpIHsKICAgIF9jbGVhckVycm9yKCk7CiAgICBub3RpZnlMaXN0ZW5lcnMoKTsKICB9CgogIC8vIC0tIFByaXZhdGUgaGVscGVycyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCiAgdm9pZCBfc2V0TG9hZGluZyhib29sIHZhbHVlKSB7CiAgICBfaXNMb2FkaW5nID0gdmFsdWU7CiAgICBub3RpZnlMaXN0ZW5lcnMoKTsKICB9CgogIHZvaWQgX2NsZWFyRXJyb3IoKSB7CiAgICBfZXJyb3IgPSBudWxsOwogIH0KCiAgRnV0dXJlPHZvaWQ+IF9wZXJzaXN0VG9rZW4oU3RyaW5nPyB0b2tlbikgYXN5bmMgewogICAgaWYgKHRva2VuID09IG51bGwpIHJldHVybjsKICAgIGZpbmFsIHByZWZzID0gYXdhaXQgU2hhcmVkUHJlZmVyZW5jZXMuZ2V0SW5zdGFuY2UoKTsKICAgIGF3YWl0IHByZWZzLnNldFN0cmluZygnYXV0aF90b2tlbicsIHRva2VuKTsKICB9CgogIEZ1dHVyZTx2b2lkPiBfY2xlYXJQZXJzaXN0ZWRUb2tlbigpIGFzeW5jIHsKICAgIGZpbmFsIHByZWZzID0gYXdhaXQgU2hhcmVkUHJlZmVyZW5jZXMuZ2V0SW5zdGFuY2UoKTsKICAgIGF3YWl0IHByZWZzLnJlbW92ZSgnYXV0aF90b2tlbicpOwogIH0KfQo="}, {"name": "auth_service.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,aW1wb3J0ICdkYXJ0OmNvbnZlcnQnOwppbXBvcnQgJ2RhcnQ6aW8nOwppbXBvcnQgJ3VzZXJfbW9kZWwuZGFydCc7CgovLy8gU2VydmljZSBjbGFzcyBoYW5kbGluZyBhdXRoZW50aWNhdGlvbiBSRVNUIEFQSSBjYWxscy4KY2xhc3MgQXV0aFNlcnZpY2UgewogIC8vIFRPRE86IFJlcGxhY2Ugd2l0aCB5b3VyIGFjdHVhbCBBUEkgYmFzZSBVUkwKICBzdGF0aWMgY29uc3QgU3RyaW5nIF9iYXNlVXJsID0gJ2h0dHBzOi8veW91ci1hcGkuZXhhbXBsZS5jb20vYXBpJzsKCiAgZmluYWwgSHR0cENsaWVudCBfaHR0cENsaWVudDsKCiAgQXV0aFNlcnZpY2Uoe0h0dHBDbGllbnQ/IGh0dHBDbGllbnR9KSA6IF9odHRwQ2xpZW50ID0gaHR0cENsaWVudCA/PyBIdHRwQ2xpZW50KCk7CgogIC8vLyBMb2dpbiB3aXRoIGVtYWlsIGFuZCBwYXNzd29yZC4KICAvLy8gUmV0dXJucyBbVXNlck1vZGVsXSBvbiBzdWNjZXNzLgogIC8vLyBUaHJvd3MgW0F1dGhFeGNlcHRpb25dIG9uIGZhaWx1cmUuCiAgRnV0dXJlPFVzZXJNb2RlbD4gbG9naW4oewogICAgcmVxdWlyZWQgU3RyaW5nIGVtYWlsLAogICAgcmVxdWlyZWQgU3RyaW5nIHBhc3N3b3JkLAogIH0pIGFzeW5jIHsKICAgIGZpbmFsIHVybCA9IFVyaS5wYXJzZSgnJF9iYXNlVXJsL2F1dGgvbG9naW4nKTsKICAgIHJldHVybiBfcG9zdFJlcXVlc3QodXJsLCB7CiAgICAgICdlbWFpbCc6IGVtYWlsLAogICAgICAncGFzc3dvcmQnOiBwYXNzd29yZCwKICAgIH0pOwogIH0KCiAgLy8vIFJlZ2lzdGVyIGEgbmV3IGFjY291bnQgd2l0aCBuYW1lLCBlbWFpbCwgYW5kIHBhc3N3b3JkLgogIC8vLyBSZXR1cm5zIFtVc2VyTW9kZWxdIG9uIHN1Y2Nlc3MuCiAgLy8vIFRocm93cyBbQXV0aEV4Y2VwdGlvbl0gb24gZmFpbHVyZS4KICBGdXR1cmU8VXNlck1vZGVsPiByZWdpc3Rlcih7CiAgICByZXF1aXJlZCBTdHJpbmcgbmFtZSwKICAgIHJlcXVpcmVkIFN0cmluZyBlbWFpbCwKICAgIHJlcXVpcmVkIFN0cmluZyBwYXNzd29yZCwKICB9KSBhc3luYyB7CiAgICBmaW5hbCB1cmwgPSBVcmkucGFyc2UoJyRfYmFzZVVybC9hdXRoL3JlZ2lzdGVyJyk7CiAgICByZXR1cm4gX3Bvc3RSZXF1ZXN0KHVybCwgewogICAgICAnbmFtZSc6IG5hbWUsCiAgICAgICdlbWFpbCc6IGVtYWlsLAogICAgICAncGFzc3dvcmQnOiBwYXNzd29yZCwKICAgIH0pOwogIH0KCiAgLy8vIExvZ291dCB0aGUgY3VycmVudCB1c2VyIChpbnZhbGlkYXRlIHRva2VuIG9uIHNlcnZlcikuCiAgRnV0dXJlPHZvaWQ+IGxvZ291dChTdHJpbmc/IHRva2VuKSBhc3luYyB7CiAgICBpZiAodG9rZW4gPT0gbnVsbCkgcmV0dXJuOwoKICAgIHRyeSB7CiAgICAgIGZpbmFsIHVybCA9IFVyaS5wYXJzZSgnJF9iYXNlVXJsL2F1dGgvbG9nb3V0Jyk7CiAgICAgIGZpbmFsIHJlcXVlc3QgPSBhd2FpdCBfaHR0cENsaWVudC5wb3N0VXJsKHVybCk7CiAgICAgIHJlcXVlc3QuaGVhZGVycy5zZXQoSHR0cEhlYWRlcnMuY29udGVudFR5cGVIZWFkZXIsICdhcHBsaWNhdGlvbi9qc29uJyk7CiAgICAgIHJlcXVlc3QuaGVhZGVycy5zZXQoSHR0cEhlYWRlcnMuYXV0aG9yaXphdGlvbkhlYWRlciwgJ0JlYXJlciAkdG9rZW4nKTsKICAgICAgZmluYWwgcmVzcG9uc2UgPSBhd2FpdCByZXF1ZXN0LmNsb3NlKCk7CiAgICAgIGF3YWl0IHJlc3BvbnNlLmRyYWluPHZvaWQ+KCk7CiAgICB9IGNhdGNoIChfKSB7CiAgICAgIC8vIExvZ291dCBpcyBiZXN0LWVmZm9ydDsgZG9uJ3QgdGhyb3cgb24gZmFpbHVyZS4KICAgIH0KICB9CgogIC8vLyBWYWxpZGF0ZSBhbiBleGlzdGluZyB0b2tlbiB3aXRoIHRoZSBzZXJ2ZXIuCiAgRnV0dXJlPFVzZXJNb2RlbD4gdmFsaWRhdGVUb2tlbihTdHJpbmcgdG9rZW4pIGFzeW5jIHsKICAgIGZpbmFsIHVybCA9IFVyaS5wYXJzZSgnJF9iYXNlVXJsL2F1dGgvbWUnKTsKICAgIGZpbmFsIHJlcXVlc3QgPSBhd2FpdCBfaHR0cENsaWVudC5nZXRVcmwodXJsKTsKICAgIHJlcXVlc3QuaGVhZGVycy5zZXQoSHR0cEhlYWRlcnMuY29udGVudFR5cGVIZWFkZXIsICdhcHBsaWNhdGlvbi9qc29uJyk7CiAgICByZXF1ZXN0LmhlYWRlcnMuc2V0KEh0dHBIZWFkZXJzLmF1dGhvcml6YXRpb25IZWFkZXIsICdCZWFyZXIgJHRva2VuJyk7CgogICAgZmluYWwgcmVzcG9uc2UgPSBhd2FpdCByZXF1ZXN0LmNsb3NlKCk7CiAgICBmaW5hbCBib2R5ID0gYXdhaXQgcmVzcG9uc2UudHJhbnNmb3JtKHV0ZjguZGVjb2Rlcikuam9pbigpOwoKICAgIGlmIChyZXNwb25zZS5zdGF0dXNDb2RlICE9IDIwMCkgewogICAgICB0aHJvdyBBdXRoRXhjZXB0aW9uKF9wYXJzZUVycm9yTWVzc2FnZShib2R5LCAnVG9rZW4gdmFsaWRhdGlvbiBmYWlsZWQnKSk7CiAgICB9CgogICAgZmluYWwganNvbiA9IGpzb25EZWNvZGUoYm9keSkgYXMgTWFwPFN0cmluZywgZHluYW1pYz47CiAgICByZXR1cm4gVXNlck1vZGVsLmZyb21Kc29uKGpzb25bJ2RhdGEnXSA/PyBqc29uKS5jb3B5V2l0aCh0b2tlbjogdG9rZW4pOwogIH0KCiAgLy8gLS0gUHJpdmF0ZSBoZWxwZXJzIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCiAgRnV0dXJlPFVzZXJNb2RlbD4gX3Bvc3RSZXF1ZXN0KFVyaSB1cmwsIE1hcDxTdHJpbmcsIGR5bmFtaWM+IHBheWxvYWQpIGFzeW5jIHsKICAgIGZpbmFsIHJlcXVlc3QgPSBhd2FpdCBfaHR0cENsaWVudC5wb3N0VXJsKHVybCk7CiAgICByZXF1ZXN0LmhlYWRlcnMuc2V0KEh0dHBIZWFkZXJzLmNvbnRlbnRUeXBlSGVhZGVyLCAnYXBwbGljYXRpb24vanNvbicpOwogICAgcmVxdWVzdC53cml0ZShqc29uRW5jb2RlKHBheWxvYWQpKTsKCiAgICBmaW5hbCByZXNwb25zZSA9IGF3YWl0IHJlcXVlc3QuY2xvc2UoKTsKICAgIGZpbmFsIGJvZHkgPSBhd2FpdCByZXNwb25zZS50cmFuc2Zvcm0odXRmOC5kZWNvZGVyKS5qb2luKCk7CgogICAgaWYgKHJlc3BvbnNlLnN0YXR1c0NvZGUgIT0gMjAwICYmIHJlc3BvbnNlLnN0YXR1c0NvZGUgIT0gMjAxKSB7CiAgICAgIHRocm93IEF1dGhFeGNlcHRpb24oX3BhcnNlRXJyb3JNZXNzYWdlKGJvZHksICdBdXRoZW50aWNhdGlvbiBmYWlsZWQnKSk7CiAgICB9CgogICAgZmluYWwganNvbiA9IGpzb25EZWNvZGUoYm9keSkgYXMgTWFwPFN0cmluZywgZHluYW1pYz47CiAgICAvLyBTdXBwb3J0IGJvdGggeyBkYXRhOiB7Li4ufSB9IGFuZCBmbGF0IHJlc3BvbnNlIHNoYXBlcwogICAgZmluYWwgZGF0YSA9IGpzb25bJ2RhdGEnXSA/PyBqc29uOwogICAgcmV0dXJuIFVzZXJNb2RlbC5mcm9tSnNvbihkYXRhIGFzIE1hcDxTdHJpbmcsIGR5bmFtaWM+KTsKICB9CgogIFN0cmluZyBfcGFyc2VFcnJvck1lc3NhZ2UoU3RyaW5nIHJlc3BvbnNlQm9keSwgU3RyaW5nIGZhbGxiYWNrKSB7CiAgICB0cnkgewogICAgICBmaW5hbCBqc29uID0ganNvbkRlY29kZShyZXNwb25zZUJvZHkpIGFzIE1hcDxTdHJpbmcsIGR5bmFtaWM+OwogICAgICByZXR1cm4ganNvblsnbWVzc2FnZSddIGFzIFN0cmluZz8gPz8ganNvblsnZXJyb3InXSBhcyBTdHJpbmc/ID8/IGZhbGxiYWNrOwogICAgfSBjYXRjaCAoXykgewogICAgICByZXR1cm4gZmFsbGJhY2s7CiAgICB9CiAgfQp9CgovLy8gQ3VzdG9tIGV4Y2VwdGlvbiBmb3IgYXV0aGVudGljYXRpb24gZXJyb3JzLgpjbGFzcyBBdXRoRXhjZXB0aW9uIGltcGxlbWVudHMgRXhjZXB0aW9uIHsKICBmaW5hbCBTdHJpbmcgbWVzc2FnZTsKICBBdXRoRXhjZXB0aW9uKHRoaXMubWVzc2FnZSk7CgogIEBvdmVycmlkZQogIFN0cmluZyB0b1N0cmluZygpID0+ICdBdXRoRXhjZXB0aW9uOiAkbWVzc2FnZSc7Cn0K"}, {"name": "auth_wrapper.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,aW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvbWF0ZXJpYWwuZGFydCc7CmltcG9ydCAncGFja2FnZTpwcm92aWRlci9wcm92aWRlci5kYXJ0JzsKCmltcG9ydCAnYXV0aF9wcm92aWRlci5kYXJ0JzsKaW1wb3J0ICdsb2dpbl9zY3JlZW4uZGFydCc7CgovLy8gQSB3cmFwcGVyIHdpZGdldCB0aGF0IHNob3dzIGVpdGhlciB0aGUgYXV0aGVudGljYXRlZCBob21lIGNvbnRlbnQKLy8vIG9yIHRoZSBsb2dpbiBzY3JlZW4sIGRlcGVuZGluZyBvbiBhdXRoIHN0YXRlLgovLy8KLy8vIFVzYWdlOiBXcmFwIHlvdXIgcm9vdCB3aWRnZXQgd2l0aCBbQ2hhbmdlTm90aWZpZXJQcm92aWRlcjxBdXRoUHJvdmlkZXI+XSwKLy8vIHRoZW4gdXNlIFtBdXRoV3JhcHBlcl0gYXMgdGhlIGhvbWUgb2YgeW91ciBbTWF0ZXJpYWxBcHBdLiBQYXNzIHlvdXIKLy8vIGV4aXN0aW5nIGhvbWUgc2NyZWVuIHdpZGdldCBhcyB0aGUgW2hvbWVTY3JlZW5dIHBhcmFtZXRlci4KY2xhc3MgQXV0aFdyYXBwZXIgZXh0ZW5kcyBTdGF0ZWZ1bFdpZGdldCB7CiAgLy8vIFRoZSB3aWRnZXQgdG8gZGlzcGxheSB3aGVuIHRoZSB1c2VyIGlzIGF1dGhlbnRpY2F0ZWQgKHlvdXIgaG9tZSBzY3JlZW4pLgogIGZpbmFsIFdpZGdldCBob21lU2NyZWVuOwoKICBjb25zdCBBdXRoV3JhcHBlcih7c3VwZXIua2V5LCByZXF1aXJlZCB0aGlzLmhvbWVTY3JlZW59KTsKCiAgQG92ZXJyaWRlCiAgU3RhdGU8QXV0aFdyYXBwZXI+IGNyZWF0ZVN0YXRlKCkgPT4gX0F1dGhXcmFwcGVyU3RhdGUoKTsKfQoKY2xhc3MgX0F1dGhXcmFwcGVyU3RhdGUgZXh0ZW5kcyBTdGF0ZTxBdXRoV3JhcHBlcj4gewogIGJvb2wgX2luaXRpYWxpemVkID0gZmFsc2U7CgogIEBvdmVycmlkZQogIHZvaWQgaW5pdFN0YXRlKCkgewogICAgc3VwZXIuaW5pdFN0YXRlKCk7CiAgICBfaW5pdEF1dGgoKTsKICB9CgogIEZ1dHVyZTx2b2lkPiBfaW5pdEF1dGgoKSBhc3luYyB7CiAgICBmaW5hbCBhdXRoUHJvdmlkZXIgPSBjb250ZXh0LnJlYWQ8QXV0aFByb3ZpZGVyPigpOwogICAgYXdhaXQgYXV0aFByb3ZpZGVyLnRyeUF1dG9Mb2dpbigpOwogICAgaWYgKG1vdW50ZWQpIHsKICAgICAgc2V0U3RhdGUoKCkgPT4gX2luaXRpYWxpemVkID0gdHJ1ZSk7CiAgICB9CiAgfQoKICBAb3ZlcnJpZGUKICBXaWRnZXQgYnVpbGQoQnVpbGRDb250ZXh0IGNvbnRleHQpIHsKICAgIGlmICghX2luaXRpYWxpemVkKSB7CiAgICAgIHJldHVybiBjb25zdCBTY2FmZm9sZCgKICAgICAgICBib2R5OiBDZW50ZXIoCiAgICAgICAgICBjaGlsZDogQ2lyY3VsYXJQcm9ncmVzc0luZGljYXRvcigpLAogICAgICAgICksCiAgICAgICk7CiAgICB9CgogICAgZmluYWwgYXV0aFByb3ZpZGVyID0gY29udGV4dC53YXRjaDxBdXRoUHJvdmlkZXI+KCk7CgogICAgaWYgKGF1dGhQcm92aWRlci5pc0F1dGhlbnRpY2F0ZWQpIHsKICAgICAgcmV0dXJuIHdpZGdldC5ob21lU2NyZWVuOwogICAgfQoKICAgIHJldHVybiBjb25zdCBMb2dpblNjcmVlbigpOwogIH0KfQo="}, {"name": "integration_example.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,Ly8vIEludGVncmF0aW9uIGV4YW1wbGUgc2hvd2luZyBob3cgdG8gd2lyZSB0aGUgYXV0aCBmZWF0dXJlIGludG8KLy8vIHlvdXIgZXhpc3RpbmcgRmx1dHRlciBhcHAuCi8vLwovLy8gQmVmb3JlIHVzaW5nIHRoaXMsIGFkZCB0aGVzZSBkZXBlbmRlbmNpZXMgdG8geW91ciBwdWJzcGVjLnlhbWw6Ci8vLwovLy8gICBkZXBlbmRlbmNpZXM6Ci8vLyAgICAgcHJvdmlkZXI6IF42LjEuMAovLy8gICAgIHNoYXJlZF9wcmVmZXJlbmNlczogXjIuMi4wCi8vLwovLy8gVGhlbiBjb3B5IHRoZSBhdXRoIGZpbGVzIGludG8geW91ciBwcm9qZWN0IChlLmcuLCBsaWIvYXV0aC8pLgoKaW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvbWF0ZXJpYWwuZGFydCc7CmltcG9ydCAncGFja2FnZTpwcm92aWRlci9wcm92aWRlci5kYXJ0JzsKCmltcG9ydCAnYXV0aF9wcm92aWRlci5kYXJ0JzsKaW1wb3J0ICdhdXRoX3dyYXBwZXIuZGFydCc7Cgp2b2lkIG1haW4oKSB7CiAgV2lkZ2V0c0ZsdXR0ZXJCaW5kaW5nLmVuc3VyZUluaXRpYWxpemVkKCk7CiAgcnVuQXBwKGNvbnN0IE15QXBwKCkpOwp9CgpjbGFzcyBNeUFwcCBleHRlbmRzIFN0YXRlbGVzc1dpZGdldCB7CiAgY29uc3QgTXlBcHAoe3N1cGVyLmtleX0pOwoKICBAb3ZlcnJpZGUKICBXaWRnZXQgYnVpbGQoQnVpbGRDb250ZXh0IGNvbnRleHQpIHsKICAgIHJldHVybiBDaGFuZ2VOb3RpZmllclByb3ZpZGVyKAogICAgICBjcmVhdGU6IChfKSA9PiBBdXRoUHJvdmlkZXIoKSwKICAgICAgY2hpbGQ6IE1hdGVyaWFsQXBwKAogICAgICAgIHRpdGxlOiAnTXkgQXBwJywKICAgICAgICB0aGVtZTogVGhlbWVEYXRhKAogICAgICAgICAgY29sb3JTY2hlbWVTZWVkOiBDb2xvcnMuYmx1ZSwKICAgICAgICAgIHVzZU1hdGVyaWFsMzogdHJ1ZSwKICAgICAgICApLAogICAgICAgIC8vIEF1dGhXcmFwcGVyIGF1dG9tYXRpY2FsbHkgc2hvd3MgTG9naW4gb3IgSG9tZSBiYXNlZCBvbiBhdXRoIHN0YXRlCiAgICAgICAgaG9tZTogY29uc3QgQXV0aFdyYXBwZXIoCiAgICAgICAgICBob21lU2NyZWVuOiBIb21lU2NyZWVuKCksIC8vIDwtLSB5b3VyIGV4aXN0aW5nIGhvbWUgc2NyZWVuIHdpZGdldAogICAgICAgICksCiAgICAgICksCiAgICApOwogIH0KfQoKLy8gLS0gQSBwbGFjZWhvbGRlciBmb3IgeW91ciBleGlzdGluZyBob21lIHNjcmVlbiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCi8vIFJlcGxhY2UgdGhpcyB3aXRoIHlvdXIgYWN0dWFsIEhvbWVTY3JlZW4gd2lkZ2V0LgoKY2xhc3MgSG9tZVNjcmVlbiBleHRlbmRzIFN0YXRlbGVzc1dpZGdldCB7CiAgY29uc3QgSG9tZVNjcmVlbih7c3VwZXIua2V5fSk7CgogIEBvdmVycmlkZQogIFdpZGdldCBidWlsZChCdWlsZENvbnRleHQgY29udGV4dCkgewogICAgZmluYWwgYXV0aFByb3ZpZGVyID0gY29udGV4dC53YXRjaDxBdXRoUHJvdmlkZXI+KCk7CiAgICBmaW5hbCB1c2VyID0gYXV0aFByb3ZpZGVyLnVzZXI7CgogICAgcmV0dXJuIFNjYWZmb2xkKAogICAgICBhcHBCYXI6IEFwcEJhcigKICAgICAgICB0aXRsZTogY29uc3QgVGV4dCgnSG9tZScpLAogICAgICAgIGFjdGlvbnM6IFsKICAgICAgICAgIEljb25CdXR0b24oCiAgICAgICAgICAgIGljb246IGNvbnN0IEljb24oSWNvbnMubG9nb3V0KSwKICAgICAgICAgICAgdG9vbHRpcDogJ0xvZ291dCcsCiAgICAgICAgICAgIG9uUHJlc3NlZDogKCkgPT4gYXV0aFByb3ZpZGVyLmxvZ291dCgpLAogICAgICAgICAgKSwKICAgICAgICBdLAogICAgICApLAogICAgICBib2R5OiBDZW50ZXIoCiAgICAgICAgY2hpbGQ6IENvbHVtbigKICAgICAgICAgIG1haW5BeGlzQWxpZ25tZW50OiBNYWluQXhpc0FsaWdubWVudC5jZW50ZXIsCiAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICBjb25zdCBUZXh0KAogICAgICAgICAgICAgICdXZWxjb21lIScsCiAgICAgICAgICAgICAgc3R5bGU6IFRleHRTdHlsZShmb250U2l6ZTogMjQsIGZvbnRXZWlnaHQ6IEZvbnRXZWlnaHQuYm9sZCksCiAgICAgICAgICAgICksCiAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogOCksCiAgICAgICAgICAgIGlmICh1c2VyICE9IG51bGwpIC4uLlsKICAgICAgICAgICAgICBUZXh0KCdOYW1lOiAke3VzZXIubmFtZX0nKSwKICAgICAgICAgICAgICBUZXh0KCdFbWFpbDogJHt1c2VyLmVtYWlsfScpLAogICAgICAgICAgICBdLAogICAgICAgICAgXSwKICAgICAgICApLAogICAgICApLAogICAgKTsKICB9Cn0K"}, {"name": "login_screen.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,aW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvbWF0ZXJpYWwuZGFydCc7CmltcG9ydCAncGFja2FnZTpwcm92aWRlci9wcm92aWRlci5kYXJ0JzsKCmltcG9ydCAnYXV0aF9wcm92aWRlci5kYXJ0JzsKCi8vLyBMb2dpbiBzY3JlZW4gd2l0aCBlbWFpbCBhbmQgcGFzc3dvcmQgZmllbGRzLgpjbGFzcyBMb2dpblNjcmVlbiBleHRlbmRzIFN0YXRlZnVsV2lkZ2V0IHsKICBjb25zdCBMb2dpblNjcmVlbih7c3VwZXIua2V5fSk7CgogIEBvdmVycmlkZQogIFN0YXRlPExvZ2luU2NyZWVuPiBjcmVhdGVTdGF0ZSgpID0+IF9Mb2dpblNjcmVlblN0YXRlKCk7Cn0KCmNsYXNzIF9Mb2dpblNjcmVlblN0YXRlIGV4dGVuZHMgU3RhdGU8TG9naW5TY3JlZW4+IHsKICBmaW5hbCBfZm9ybUtleSA9IEdsb2JhbEtleTxGb3JtU3RhdGU+KCk7CiAgZmluYWwgX2VtYWlsQ29udHJvbGxlciA9IFRleHRFZGl0aW5nQ29udHJvbGxlcigpOwogIGZpbmFsIF9wYXNzd29yZENvbnRyb2xsZXIgPSBUZXh0RWRpdGluZ0NvbnRyb2xsZXIoKTsKICBib29sIF9vYnNjdXJlUGFzc3dvcmQgPSB0cnVlOwoKICBAb3ZlcnJpZGUKICB2b2lkIGRpc3Bvc2UoKSB7CiAgICBfZW1haWxDb250cm9sbGVyLmRpc3Bvc2UoKTsKICAgIF9wYXNzd29yZENvbnRyb2xsZXIuZGlzcG9zZSgpOwogICAgc3VwZXIuZGlzcG9zZSgpOwogIH0KCiAgRnV0dXJlPHZvaWQ+IF9zdWJtaXQoKSBhc3luYyB7CiAgICBpZiAoIV9mb3JtS2V5LmN1cnJlbnRTdGF0ZSEudmFsaWRhdGUoKSkgcmV0dXJuOwoKICAgIGZpbmFsIGF1dGhQcm92aWRlciA9IGNvbnRleHQucmVhZDxBdXRoUHJvdmlkZXI+KCk7CiAgICBmaW5hbCBzdWNjZXNzID0gYXdhaXQgYXV0aFByb3ZpZGVyLmxvZ2luKAogICAgICBfZW1haWxDb250cm9sbGVyLnRleHQudHJpbSgpLAogICAgICBfcGFzc3dvcmRDb250cm9sbGVyLnRleHQsCiAgICApOwoKICAgIGlmICghc3VjY2VzcyAmJiBtb3VudGVkKSB7CiAgICAgIFNjYWZmb2xkTWVzc2VuZ2VyLm9mKGNvbnRleHQpLnNob3dTbmFja0JhcigKICAgICAgICBTbmFja0JhcigKICAgICAgICAgIGNvbnRlbnQ6IFRleHQoYXV0aFByb3ZpZGVyLmVycm9yID8/ICdMb2dpbiBmYWlsZWQnKSwKICAgICAgICAgIGJhY2tncm91bmRDb2xvcjogQ29sb3JzLnJlZCwKICAgICAgICApLAogICAgICApOwogICAgfQogIH0KCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0KSB7CiAgICBmaW5hbCBhdXRoUHJvdmlkZXIgPSBjb250ZXh0LndhdGNoPEF1dGhQcm92aWRlcj4oKTsKCiAgICByZXR1cm4gU2NhZmZvbGQoCiAgICAgIGJvZHk6IFNhZmVBcmVhKAogICAgICAgIGNoaWxkOiBDZW50ZXIoCiAgICAgICAgICBjaGlsZDogU2luZ2xlQ2hpbGRTY3JvbGxWaWV3KAogICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLmFsbCgyNC4wKSwKICAgICAgICAgICAgY2hpbGQ6IEZvcm0oCiAgICAgICAgICAgICAga2V5OiBfZm9ybUtleSwKICAgICAgICAgICAgICBjaGlsZDogQ29sdW1uKAogICAgICAgICAgICAgICAgbWFpbkF4aXNBbGlnbm1lbnQ6IE1haW5BeGlzQWxpZ25tZW50LmNlbnRlciwKICAgICAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0cmV0Y2gsCiAgICAgICAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICAgICAgICAvLyBBcHAgbG9nbyAvIHRpdGxlCiAgICAgICAgICAgICAgICAgIEljb24oCiAgICAgICAgICAgICAgICAgICAgSWNvbnMubG9ja19vdXRsaW5lLAogICAgICAgICAgICAgICAgICAgIHNpemU6IDY0LAogICAgICAgICAgICAgICAgICAgIGNvbG9yOiBUaGVtZS5vZihjb250ZXh0KS5jb2xvclNjaGVtZS5wcmltYXJ5LAogICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDE2KSwKICAgICAgICAgICAgICAgICAgVGV4dCgKICAgICAgICAgICAgICAgICAgICAnV2VsY29tZSBCYWNrJywKICAgICAgICAgICAgICAgICAgICB0ZXh0QWxpZ246IFRleHRBbGlnbi5jZW50ZXIsCiAgICAgICAgICAgICAgICAgICAgc3R5bGU6IFRoZW1lLm9mKGNvbnRleHQpLnRleHRUaGVtZS5oZWFkbGluZU1lZGl1bT8uY29weVdpdGgoCiAgICAgICAgICAgICAgICAgICAgICAgICAgZm9udFdlaWdodDogRm9udFdlaWdodC5ib2xkLAogICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDMyKSwKCiAgICAgICAgICAgICAgICAgIC8vIEVtYWlsIGZpZWxkCiAgICAgICAgICAgICAgICAgIFRleHRGb3JtRmllbGQoCiAgICAgICAgICAgICAgICAgICAgY29udHJvbGxlcjogX2VtYWlsQ29udHJvbGxlciwKICAgICAgICAgICAgICAgICAgICBrZXlib2FyZFR5cGU6IFRleHRJbnB1dFR5cGUuZW1haWxBZGRyZXNzLAogICAgICAgICAgICAgICAgICAgIGF1dG9jb3JyZWN0OiBmYWxzZSwKICAgICAgICAgICAgICAgICAgICBkZWNvcmF0aW9uOiBjb25zdCBJbnB1dERlY29yYXRpb24oCiAgICAgICAgICAgICAgICAgICAgICBsYWJlbFRleHQ6ICdFbWFpbCcsCiAgICAgICAgICAgICAgICAgICAgICBwcmVmaXhJY29uOiBJY29uKEljb25zLmVtYWlsX291dGxpbmVkKSwKICAgICAgICAgICAgICAgICAgICAgIGJvcmRlcjogT3V0bGluZUlucHV0Qm9yZGVyKCksCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICB2YWxpZGF0b3I6ICh2YWx1ZSkgewogICAgICAgICAgICAgICAgICAgICAgaWYgKHZhbHVlID09IG51bGwgfHwgdmFsdWUudHJpbSgpLmlzRW1wdHkpIHsKICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICdQbGVhc2UgZW50ZXIgeW91ciBlbWFpbCc7CiAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICBpZiAoIXZhbHVlLmNvbnRhaW5zKCdAJykpIHsKICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICdQbGVhc2UgZW50ZXIgYSB2YWxpZCBlbWFpbCc7CiAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gbnVsbDsKICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDE2KSwKCiAgICAgICAgICAgICAgICAgIC8vIFBhc3N3b3JkIGZpZWxkCiAgICAgICAgICAgICAgICAgIFRleHRGb3JtRmllbGQoCiAgICAgICAgICAgICAgICAgICAgY29udHJvbGxlcjogX3Bhc3N3b3JkQ29udHJvbGxlciwKICAgICAgICAgICAgICAgICAgICBvYnNjdXJlVGV4dDogX29ic2N1cmVQYXNzd29yZCwKICAgICAgICAgICAgICAgICAgICBkZWNvcmF0aW9uOiBJbnB1dERlY29yYXRpb24oCiAgICAgICAgICAgICAgICAgICAgICBsYWJlbFRleHQ6ICdQYXNzd29yZCcsCiAgICAgICAgICAgICAgICAgICAgICBwcmVmaXhJY29uOiBjb25zdCBJY29uKEljb25zLmxvY2tfb3V0bGluZSksCiAgICAgICAgICAgICAgICAgICAgICBib3JkZXI6IGNvbnN0IE91dGxpbmVJbnB1dEJvcmRlcigpLAogICAgICAgICAgICAgICAgICAgICAgc3VmZml4SWNvbjogSWNvbkJ1dHRvbigKICAgICAgICAgICAgICAgICAgICAgICAgaWNvbjogSWNvbigKICAgICAgICAgICAgICAgICAgICAgICAgICBfb2JzY3VyZVBhc3N3b3JkCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgID8gSWNvbnMudmlzaWJpbGl0eV9vZmYKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgOiBJY29ucy52aXNpYmlsaXR5LAogICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICAgICBvblByZXNzZWQ6ICgpIHsKICAgICAgICAgICAgICAgICAgICAgICAgICBzZXRTdGF0ZSgoKSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICBfb2JzY3VyZVBhc3N3b3JkID0gIV9vYnNjdXJlUGFzc3dvcmQ7CiAgICAgICAgICAgICAgICAgICAgICAgICAgfSk7CiAgICAgICAgICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgdmFsaWRhdG9yOiAodmFsdWUpIHsKICAgICAgICAgICAgICAgICAgICAgIGlmICh2YWx1ZSA9PSBudWxsIHx8IHZhbHVlLmlzRW1wdHkpIHsKICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICdQbGVhc2UgZW50ZXIgeW91ciBwYXNzd29yZCc7CiAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICBpZiAodmFsdWUubGVuZ3RoIDwgNikgewogICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gJ1Bhc3N3b3JkIG11c3QgYmUgYXQgbGVhc3QgNiBjaGFyYWN0ZXJzJzsKICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgIHJldHVybiBudWxsOwogICAgICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogMjQpLAoKICAgICAgICAgICAgICAgICAgLy8gTG9naW4gYnV0dG9uCiAgICAgICAgICAgICAgICAgIEZpbGxlZEJ1dHRvbigKICAgICAgICAgICAgICAgICAgICBvblByZXNzZWQ6IGF1dGhQcm92aWRlci5pc0xvYWRpbmcgPyBudWxsIDogX3N1Ym1pdCwKICAgICAgICAgICAgICAgICAgICBjaGlsZDogYXV0aFByb3ZpZGVyLmlzTG9hZGluZwogICAgICAgICAgICAgICAgICAgICAgICA/IGNvbnN0IFNpemVkQm94KAogICAgICAgICAgICAgICAgICAgICAgICAgICAgaGVpZ2h0OiAyMCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgIHdpZHRoOiAyMCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNoaWxkOiBDaXJjdWxhclByb2dyZXNzSW5kaWNhdG9yKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJva2VXaWR0aDogMiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy53aGl0ZSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgICAgICAgICA6IGNvbnN0IFRleHQoJ0xvZ2luJyksCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogMTYpLAoKICAgICAgICAgICAgICAgICAgLy8gUmVnaXN0ZXIgbGluawogICAgICAgICAgICAgICAgICBUZXh0QnV0dG9uKAogICAgICAgICAgICAgICAgICAgIG9uUHJlc3NlZDogYXV0aFByb3ZpZGVyLmlzTG9hZGluZwogICAgICAgICAgICAgICAgICAgICAgICA/IG51bGwKICAgICAgICAgICAgICAgICAgICAgICAgOiAoKSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICBOYXZpZ2F0b3Iub2YoY29udGV4dCkucHVzaCgKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgTWF0ZXJpYWxQYWdlUm91dGUoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYnVpbGRlcjogKF8pID0+IGNvbnN0IFJlZ2lzdGVyU2NyZWVuKCksCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgICAgICAgICApOwogICAgICAgICAgICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAgICAgY2hpbGQ6IGNvbnN0IFRleHQoIkRvbid0IGhhdmUgYW4gYWNjb3VudD8gUmVnaXN0ZXIiKSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgKSwKICAgICAgICAgICksCiAgICAgICAgKSwKICAgICAgKSwKICAgICk7CiAgfQp9CgovLyBSZS1leHBvcnQgc28gdGhlIGltcG9ydCBwYXRoIHdvcmtzIGZvciBhIHNpbmdsZSBmaWxlLgovLyBJbiBhIHJlYWwgcHJvamVjdCB0aGlzIHdvdWxkIGJlIGluIGl0cyBvd24gZmlsZS4KZXhwb3J0ICdyZWdpc3Rlcl9zY3JlZW4uZGFydCc7Cg=="}, {"name": "register_screen.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,aW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvbWF0ZXJpYWwuZGFydCc7CmltcG9ydCAncGFja2FnZTpwcm92aWRlci9wcm92aWRlci5kYXJ0JzsKCmltcG9ydCAnYXV0aF9wcm92aWRlci5kYXJ0JzsKCi8vLyBSZWdpc3RyYXRpb24gc2NyZWVuIHdpdGggbmFtZSwgZW1haWwsIGFuZCBwYXNzd29yZCBmaWVsZHMuCmNsYXNzIFJlZ2lzdGVyU2NyZWVuIGV4dGVuZHMgU3RhdGVmdWxXaWRnZXQgewogIGNvbnN0IFJlZ2lzdGVyU2NyZWVuKHtzdXBlci5rZXl9KTsKCiAgQG92ZXJyaWRlCiAgU3RhdGU8UmVnaXN0ZXJTY3JlZW4+IGNyZWF0ZVN0YXRlKCkgPT4gX1JlZ2lzdGVyU2NyZWVuU3RhdGUoKTsKfQoKY2xhc3MgX1JlZ2lzdGVyU2NyZWVuU3RhdGUgZXh0ZW5kcyBTdGF0ZTxSZWdpc3RlclNjcmVlbj4gewogIGZpbmFsIF9mb3JtS2V5ID0gR2xvYmFsS2V5PEZvcm1TdGF0ZT4oKTsKICBmaW5hbCBfbmFtZUNvbnRyb2xsZXIgPSBUZXh0RWRpdGluZ0NvbnRyb2xsZXIoKTsKICBmaW5hbCBfZW1haWxDb250cm9sbGVyID0gVGV4dEVkaXRpbmdDb250cm9sbGVyKCk7CiAgZmluYWwgX3Bhc3N3b3JkQ29udHJvbGxlciA9IFRleHRFZGl0aW5nQ29udHJvbGxlcigpOwogIGZpbmFsIF9jb25maXJtUGFzc3dvcmRDb250cm9sbGVyID0gVGV4dEVkaXRpbmdDb250cm9sbGVyKCk7CiAgYm9vbCBfb2JzY3VyZVBhc3N3b3JkID0gdHJ1ZTsKICBib29sIF9vYnNjdXJlQ29uZmlybVBhc3N3b3JkID0gdHJ1ZTsKCiAgQG92ZXJyaWRlCiAgdm9pZCBkaXNwb3NlKCkgewogICAgX25hbWVDb250cm9sbGVyLmRpc3Bvc2UoKTsKICAgIF9lbWFpbENvbnRyb2xsZXIuZGlzcG9zZSgpOwogICAgX3Bhc3N3b3JkQ29udHJvbGxlci5kaXNwb3NlKCk7CiAgICBfY29uZmlybVBhc3N3b3JkQ29udHJvbGxlci5kaXNwb3NlKCk7CiAgICBzdXBlci5kaXNwb3NlKCk7CiAgfQoKICBGdXR1cmU8dm9pZD4gX3N1Ym1pdCgpIGFzeW5jIHsKICAgIGlmICghX2Zvcm1LZXkuY3VycmVudFN0YXRlIS52YWxpZGF0ZSgpKSByZXR1cm47CgogICAgZmluYWwgYXV0aFByb3ZpZGVyID0gY29udGV4dC5yZWFkPEF1dGhQcm92aWRlcj4oKTsKICAgIGZpbmFsIHN1Y2Nlc3MgPSBhd2FpdCBhdXRoUHJvdmlkZXIucmVnaXN0ZXIoCiAgICAgIF9uYW1lQ29udHJvbGxlci50ZXh0LnRyaW0oKSwKICAgICAgX2VtYWlsQ29udHJvbGxlci50ZXh0LnRyaW0oKSwKICAgICAgX3Bhc3N3b3JkQ29udHJvbGxlci50ZXh0LAogICAgKTsKCiAgICBpZiAoIXN1Y2Nlc3MgJiYgbW91bnRlZCkgewogICAgICBTY2FmZm9sZE1lc3Nlbmdlci5vZihjb250ZXh0KS5zaG93U25hY2tCYXIoCiAgICAgICAgU25hY2tCYXIoCiAgICAgICAgICBjb250ZW50OiBUZXh0KGF1dGhQcm92aWRlci5lcnJvciA/PyAnUmVnaXN0cmF0aW9uIGZhaWxlZCcpLAogICAgICAgICAgYmFja2dyb3VuZENvbG9yOiBDb2xvcnMucmVkLAogICAgICAgICksCiAgICAgICk7CiAgICB9CiAgfQoKICBAb3ZlcnJpZGUKICBXaWRnZXQgYnVpbGQoQnVpbGRDb250ZXh0IGNvbnRleHQpIHsKICAgIGZpbmFsIGF1dGhQcm92aWRlciA9IGNvbnRleHQud2F0Y2g8QXV0aFByb3ZpZGVyPigpOwoKICAgIHJldHVybiBTY2FmZm9sZCgKICAgICAgYXBwQmFyOiBBcHBCYXIoCiAgICAgICAgdGl0bGU6IGNvbnN0IFRleHQoJ0NyZWF0ZSBBY2NvdW50JyksCiAgICAgICksCiAgICAgIGJvZHk6IFNhZmVBcmVhKAogICAgICAgIGNoaWxkOiBDZW50ZXIoCiAgICAgICAgICBjaGlsZDogU2luZ2xlQ2hpbGRTY3JvbGxWaWV3KAogICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLmFsbCgyNC4wKSwKICAgICAgICAgICAgY2hpbGQ6IEZvcm0oCiAgICAgICAgICAgICAga2V5OiBfZm9ybUtleSwKICAgICAgICAgICAgICBjaGlsZDogQ29sdW1uKAogICAgICAgICAgICAgICAgbWFpbkF4aXNBbGlnbm1lbnQ6IE1haW5BeGlzQWxpZ25tZW50LmNlbnRlciwKICAgICAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0cmV0Y2gsCiAgICAgICAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICAgICAgICAvLyBIZWFkZXIgaWNvbgogICAgICAgICAgICAgICAgICBJY29uKAogICAgICAgICAgICAgICAgICAgIEljb25zLnBlcnNvbl9hZGRfb3V0bGluZWQsCiAgICAgICAgICAgICAgICAgICAgc2l6ZTogNjQsCiAgICAgICAgICAgICAgICAgICAgY29sb3I6IFRoZW1lLm9mKGNvbnRleHQpLmNvbG9yU2NoZW1lLnByaW1hcnksCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogMTYpLAogICAgICAgICAgICAgICAgICBUZXh0KAogICAgICAgICAgICAgICAgICAgICdDcmVhdGUgQWNjb3VudCcsCiAgICAgICAgICAgICAgICAgICAgdGV4dEFsaWduOiBUZXh0QWxpZ24uY2VudGVyLAogICAgICAgICAgICAgICAgICAgIHN0eWxlOiBUaGVtZS5vZihjb250ZXh0KS50ZXh0VGhlbWUuaGVhZGxpbmVNZWRpdW0/LmNvcHlXaXRoKAogICAgICAgICAgICAgICAgICAgICAgICAgIGZvbnRXZWlnaHQ6IEZvbnRXZWlnaHQuYm9sZCwKICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAzMiksCgogICAgICAgICAgICAgICAgICAvLyBOYW1lIGZpZWxkCiAgICAgICAgICAgICAgICAgIFRleHRGb3JtRmllbGQoCiAgICAgICAgICAgICAgICAgICAgY29udHJvbGxlcjogX25hbWVDb250cm9sbGVyLAogICAgICAgICAgICAgICAgICAgIHRleHRDYXBpdGFsaXphdGlvbjogVGV4dENhcGl0YWxpemF0aW9uLndvcmRzLAogICAgICAgICAgICAgICAgICAgIGRlY29yYXRpb246IGNvbnN0IElucHV0RGVjb3JhdGlvbigKICAgICAgICAgICAgICAgICAgICAgIGxhYmVsVGV4dDogJ0Z1bGwgTmFtZScsCiAgICAgICAgICAgICAgICAgICAgICBwcmVmaXhJY29uOiBJY29uKEljb25zLnBlcnNvbl9vdXRsaW5lKSwKICAgICAgICAgICAgICAgICAgICAgIGJvcmRlcjogT3V0bGluZUlucHV0Qm9yZGVyKCksCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICB2YWxpZGF0b3I6ICh2YWx1ZSkgewogICAgICAgICAgICAgICAgICAgICAgaWYgKHZhbHVlID09IG51bGwgfHwgdmFsdWUudHJpbSgpLmlzRW1wdHkpIHsKICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICdQbGVhc2UgZW50ZXIgeW91ciBuYW1lJzsKICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgIGlmICh2YWx1ZS50cmltKCkubGVuZ3RoIDwgMikgewogICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gJ05hbWUgbXVzdCBiZSBhdCBsZWFzdCAyIGNoYXJhY3RlcnMnOwogICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIG51bGw7CiAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCgogICAgICAgICAgICAgICAgICAvLyBFbWFpbCBmaWVsZAogICAgICAgICAgICAgICAgICBUZXh0Rm9ybUZpZWxkKAogICAgICAgICAgICAgICAgICAgIGNvbnRyb2xsZXI6IF9lbWFpbENvbnRyb2xsZXIsCiAgICAgICAgICAgICAgICAgICAga2V5Ym9hcmRUeXBlOiBUZXh0SW5wdXRUeXBlLmVtYWlsQWRkcmVzcywKICAgICAgICAgICAgICAgICAgICBhdXRvY29ycmVjdDogZmFsc2UsCiAgICAgICAgICAgICAgICAgICAgZGVjb3JhdGlvbjogY29uc3QgSW5wdXREZWNvcmF0aW9uKAogICAgICAgICAgICAgICAgICAgICAgbGFiZWxUZXh0OiAnRW1haWwnLAogICAgICAgICAgICAgICAgICAgICAgcHJlZml4SWNvbjogSWNvbihJY29ucy5lbWFpbF9vdXRsaW5lZCksCiAgICAgICAgICAgICAgICAgICAgICBib3JkZXI6IE91dGxpbmVJbnB1dEJvcmRlcigpLAogICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgdmFsaWRhdG9yOiAodmFsdWUpIHsKICAgICAgICAgICAgICAgICAgICAgIGlmICh2YWx1ZSA9PSBudWxsIHx8IHZhbHVlLnRyaW0oKS5pc0VtcHR5KSB7CiAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAnUGxlYXNlIGVudGVyIHlvdXIgZW1haWwnOwogICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgaWYgKCF2YWx1ZS5jb250YWlucygnQCcpKSB7CiAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAnUGxlYXNlIGVudGVyIGEgdmFsaWQgZW1haWwnOwogICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIG51bGw7CiAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCgogICAgICAgICAgICAgICAgICAvLyBQYXNzd29yZCBmaWVsZAogICAgICAgICAgICAgICAgICBUZXh0Rm9ybUZpZWxkKAogICAgICAgICAgICAgICAgICAgIGNvbnRyb2xsZXI6IF9wYXNzd29yZENvbnRyb2xsZXIsCiAgICAgICAgICAgICAgICAgICAgb2JzY3VyZVRleHQ6IF9vYnNjdXJlUGFzc3dvcmQsCiAgICAgICAgICAgICAgICAgICAgZGVjb3JhdGlvbjogSW5wdXREZWNvcmF0aW9uKAogICAgICAgICAgICAgICAgICAgICAgbGFiZWxUZXh0OiAnUGFzc3dvcmQnLAogICAgICAgICAgICAgICAgICAgICAgcHJlZml4SWNvbjogY29uc3QgSWNvbihJY29ucy5sb2NrX291dGxpbmUpLAogICAgICAgICAgICAgICAgICAgICAgYm9yZGVyOiBjb25zdCBPdXRsaW5lSW5wdXRCb3JkZXIoKSwKICAgICAgICAgICAgICAgICAgICAgIHN1ZmZpeEljb246IEljb25CdXR0b24oCiAgICAgICAgICAgICAgICAgICAgICAgIGljb246IEljb24oCiAgICAgICAgICAgICAgICAgICAgICAgICAgX29ic2N1cmVQYXNzd29yZAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA/IEljb25zLnZpc2liaWxpdHlfb2ZmCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDogSWNvbnMudmlzaWJpbGl0eSwKICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgICAgb25QcmVzc2VkOiAoKSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0U3RhdGUoKCkgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgX29ic2N1cmVQYXNzd29yZCA9ICFfb2JzY3VyZVBhc3N3b3JkOwogICAgICAgICAgICAgICAgICAgICAgICAgIH0pOwogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgIHZhbGlkYXRvcjogKHZhbHVlKSB7CiAgICAgICAgICAgICAgICAgICAgICBpZiAodmFsdWUgPT0gbnVsbCB8fCB2YWx1ZS5pc0VtcHR5KSB7CiAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAnUGxlYXNlIGVudGVyIGEgcGFzc3dvcmQnOwogICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgaWYgKHZhbHVlLmxlbmd0aCA8IDYpIHsKICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICdQYXNzd29yZCBtdXN0IGJlIGF0IGxlYXN0IDYgY2hhcmFjdGVycyc7CiAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gbnVsbDsKICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDE2KSwKCiAgICAgICAgICAgICAgICAgIC8vIENvbmZpcm0gcGFzc3dvcmQgZmllbGQKICAgICAgICAgICAgICAgICAgVGV4dEZvcm1GaWVsZCgKICAgICAgICAgICAgICAgICAgICBjb250cm9sbGVyOiBfY29uZmlybVBhc3N3b3JkQ29udHJvbGxlciwKICAgICAgICAgICAgICAgICAgICBvYnNjdXJlVGV4dDogX29ic2N1cmVDb25maXJtUGFzc3dvcmQsCiAgICAgICAgICAgICAgICAgICAgZGVjb3JhdGlvbjogSW5wdXREZWNvcmF0aW9uKAogICAgICAgICAgICAgICAgICAgICAgbGFiZWxUZXh0OiAnQ29uZmlybSBQYXNzd29yZCcsCiAgICAgICAgICAgICAgICAgICAgICBwcmVmaXhJY29uOiBjb25zdCBJY29uKEljb25zLmxvY2tfb3V0bGluZSksCiAgICAgICAgICAgICAgICAgICAgICBib3JkZXI6IGNvbnN0IE91dGxpbmVJbnB1dEJvcmRlcigpLAogICAgICAgICAgICAgICAgICAgICAgc3VmZml4SWNvbjogSWNvbkJ1dHRvbigKICAgICAgICAgICAgICAgICAgICAgICAgaWNvbjogSWNvbigKICAgICAgICAgICAgICAgICAgICAgICAgICBfb2JzY3VyZUNvbmZpcm1QYXNzd29yZAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA/IEljb25zLnZpc2liaWxpdHlfb2ZmCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDogSWNvbnMudmlzaWJpbGl0eSwKICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgICAgb25QcmVzc2VkOiAoKSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0U3RhdGUoKCkgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgX29ic2N1cmVDb25maXJtUGFzc3dvcmQgPSAhX29ic2N1cmVDb25maXJtUGFzc3dvcmQ7CiAgICAgICAgICAgICAgICAgICAgICAgICAgfSk7CiAgICAgICAgICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgdmFsaWRhdG9yOiAodmFsdWUpIHsKICAgICAgICAgICAgICAgICAgICAgIGlmICh2YWx1ZSA9PSBudWxsIHx8IHZhbHVlLmlzRW1wdHkpIHsKICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICdQbGVhc2UgY29uZmlybSB5b3VyIHBhc3N3b3JkJzsKICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgIGlmICh2YWx1ZSAhPSBfcGFzc3dvcmRDb250cm9sbGVyLnRleHQpIHsKICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICdQYXNzd29yZHMgZG8gbm90IG1hdGNoJzsKICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgIHJldHVybiBudWxsOwogICAgICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogMjQpLAoKICAgICAgICAgICAgICAgICAgLy8gUmVnaXN0ZXIgYnV0dG9uCiAgICAgICAgICAgICAgICAgIEZpbGxlZEJ1dHRvbigKICAgICAgICAgICAgICAgICAgICBvblByZXNzZWQ6IGF1dGhQcm92aWRlci5pc0xvYWRpbmcgPyBudWxsIDogX3N1Ym1pdCwKICAgICAgICAgICAgICAgICAgICBjaGlsZDogYXV0aFByb3ZpZGVyLmlzTG9hZGluZwogICAgICAgICAgICAgICAgICAgICAgICA/IGNvbnN0IFNpemVkQm94KAogICAgICAgICAgICAgICAgICAgICAgICAgICAgaGVpZ2h0OiAyMCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgIHdpZHRoOiAyMCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNoaWxkOiBDaXJjdWxhclByb2dyZXNzSW5kaWNhdG9yKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJva2VXaWR0aDogMiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy53aGl0ZSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgICAgICAgICA6IGNvbnN0IFRleHQoJ1JlZ2lzdGVyJyksCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogMTYpLAoKICAgICAgICAgICAgICAgICAgLy8gTG9naW4gbGluawogICAgICAgICAgICAgICAgICBUZXh0QnV0dG9uKAogICAgICAgICAgICAgICAgICAgIG9uUHJlc3NlZDogYXV0aFByb3ZpZGVyLmlzTG9hZGluZwogICAgICAgICAgICAgICAgICAgICAgICA/IG51bGwKICAgICAgICAgICAgICAgICAgICAgICAgOiAoKSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICBOYXZpZ2F0b3Iub2YoY29udGV4dCkucG9wKCk7CiAgICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICBjaGlsZDogY29uc3QgVGV4dCgnQWxyZWFkeSBoYXZlIGFuIGFjY291bnQ/IExvZ2luJyksCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICksCiAgICAgICAgICAgICksCiAgICAgICAgICApLAogICAgICAgICksCiAgICAgICksCiAgICApOwogIH0KfQo="}, {"name": "summary.md", "type": "text", "content": "# Auth Feature - Summary\n\n## Overview\n\nAdded a complete email/password authentication feature for a Flutter app that connects to a REST API. The feature includes login, registration, session persistence, and automatic auth state management.\n\n## Files Created\n\n| File | Description |\n|------|-------------|\n| `user_model.dart` | Data model for the authenticated user (id, email, name, token) with JSON serialization |\n| `auth_service.dart` | REST API service layer using `dart:io` HttpClient for login, register, logout, and token validation |\n| `auth_provider.dart` | State management using `ChangeNotifier` (Provider pattern). Handles login/register flows, error handling, and token persistence via `shared_preferences` |\n| `login_screen.dart` | Login UI with email/password fields, form validation, password visibility toggle, loading state, and navigation to register |\n| `register_screen.dart` | Registration UI with name/email/password/confirm-password fields, form validation, password visibility toggle, and loading state |\n| `auth_wrapper.dart` | Auth gate widget that shows either the login screen or your existing home screen based on authentication state. Handles auto-login on app start |\n| `integration_example.dart` | Complete example showing how to wire everything into your existing app (main.dart setup with Provider, Material app, and AuthWrapper) |\n| `api_contracts.md` | Documentation of the expected REST API endpoints and request/response formats |\n\n## Dependencies Required\n\nAdd to `pubspec.yaml`:\n```yaml\ndependencies:\n  provider: ^6.1.0\n  shared_preferences: ^2.2.0\n```\n\n## Integration Steps\n\n1. Copy all `.dart` files into your project (e.g., `lib/auth/`)\n2. Add the dependencies listed above\n3. Wrap your `MaterialApp` with `ChangeNotifierProvider<AuthProvider>` (see `integration_example.dart`)\n4. Use `AuthWrapper` as the home widget, passing your existing home screen\n5. Update `AuthService._baseUrl` to point to your actual API server\n\n## Architecture\n\n```\nUI Layer (Screens)\n  |-- LoginScreen\n  |-- RegisterScreen\n  |-- AuthWrapper (routing guard)\n       |\nState Management\n  |-- AuthProvider (ChangeNotifier)\n       |\nService Layer\n  |-- AuthService (HTTP client)\n       |\nREST API\n  |-- POST /auth/login\n  |-- POST /auth/register\n  |-- POST /auth/logout\n  |-- GET  /auth/me\n```\n\n## Key Design Decisions\n\n- **Provider pattern** for state management (standard Flutter approach)\n- **dart:io HttpClient** for network requests (no extra HTTP package dependency)\n- **shared_preferences** for persisting the auth token across app restarts\n- **Auto-login** attempts to validate saved token on app launch\n- **Form validation** on both login and register screens\n- **Error handling** with user-friendly messages from the API\n- **AuthException** custom exception class for clean error propagation\n"}, {"name": "user_model.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,Ly8vIFVzZXIgbW9kZWwgcmVwcmVzZW50aW5nIGF1dGhlbnRpY2F0ZWQgdXNlciBkYXRhLgpjbGFzcyBVc2VyTW9kZWwgewogIGZpbmFsIFN0cmluZyBpZDsKICBmaW5hbCBTdHJpbmcgZW1haWw7CiAgZmluYWwgU3RyaW5nIG5hbWU7CiAgZmluYWwgU3RyaW5nPyB0b2tlbjsKCiAgY29uc3QgVXNlck1vZGVsKHsKICAgIHJlcXVpcmVkIHRoaXMuaWQsCiAgICByZXF1aXJlZCB0aGlzLmVtYWlsLAogICAgcmVxdWlyZWQgdGhpcy5uYW1lLAogICAgdGhpcy50b2tlbiwKICB9KTsKCiAgZmFjdG9yeSBVc2VyTW9kZWwuZnJvbUpzb24oTWFwPFN0cmluZywgZHluYW1pYz4ganNvbikgewogICAgcmV0dXJuIFVzZXJNb2RlbCgKICAgICAgaWQ6IGpzb25bJ2lkJ10gYXMgU3RyaW5nPyA/PyAnJywKICAgICAgZW1haWw6IGpzb25bJ2VtYWlsJ10gYXMgU3RyaW5nPyA/PyAnJywKICAgICAgbmFtZToganNvblsnbmFtZSddIGFzIFN0cmluZz8gPz8gJycsCiAgICAgIHRva2VuOiBqc29uWyd0b2tlbiddIGFzIFN0cmluZz8sCiAgICApOwogIH0KCiAgTWFwPFN0cmluZywgZHluYW1pYz4gdG9Kc29uKCkgewogICAgcmV0dXJuIHsKICAgICAgJ2lkJzogaWQsCiAgICAgICdlbWFpbCc6IGVtYWlsLAogICAgICAnbmFtZSc6IG5hbWUsCiAgICAgIGlmICh0b2tlbiAhPSBudWxsKSAndG9rZW4nOiB0b2tlbiwKICAgIH07CiAgfQoKICBVc2VyTW9kZWwgY29weVdpdGgoewogICAgU3RyaW5nPyBpZCwKICAgIFN0cmluZz8gZW1haWwsCiAgICBTdHJpbmc/IG5hbWUsCiAgICBTdHJpbmc/IHRva2VuLAogIH0pIHsKICAgIHJldHVybiBVc2VyTW9kZWwoCiAgICAgIGlkOiBpZCA/PyB0aGlzLmlkLAogICAgICBlbWFpbDogZW1haWwgPz8gdGhpcy5lbWFpbCwKICAgICAgbmFtZTogbmFtZSA/PyB0aGlzLm5hbWUsCiAgICAgIHRva2VuOiB0b2tlbiA/PyB0aGlzLnRva2VuLAogICAgKTsKICB9Cn0K"}], "grading": {"eval_name": "auth-feature", "configuration": "without_skill", "expectations": [{"text": "has_login_register_screens", "passed": true, "evidence": "Both login_screen.dart (class LoginScreen extends StatefulWidget) and register_screen.dart (class RegisterScreen extends StatefulWidget) exist as separate widget files with full form UIs including email, password fields, and navigation between each other."}, {"text": "uses_dio_for_api", "passed": false, "evidence": "auth_service.dart uses dart:io HttpClient (import 'dart:io'; final HttpClient _httpClient) instead of the Dio package. The summary explicitly states: 'dart:io HttpClient for network requests (no extra HTTP package dependency)'."}, {"text": "has_token_storage", "passed": true, "evidence": "auth_provider.dart imports shared_preferences and implements _persistToken() which calls SharedPreferences.getInstance() and prefs.setString('auth_token', token), as well as tryAutoLogin() which reads the saved token and _clearPersistedToken() which removes it."}, {"text": "has_auth_guard", "passed": true, "evidence": "auth_wrapper.dart implements AuthWrapper widget that checks authProvider.isAuthenticated to decide whether to show the homeScreen or LoginScreen. It also calls tryAutoLogin() in initState to restore sessions on app start, and shows a loading spinner during initialization."}, {"text": "handles_errors", "passed": true, "evidence": "auth_provider.dart tracks _isLoading, _error, and success (return bool) states. Login/register methods use try/catch blocks handling AuthException (e.message) and generic exceptions ('An unexpected error occurred'). Both screens show SnackBar with error messages on failure and display CircularProgressIndicator during loading."}]}}, {"id": "performance-debug-with_skill", "prompt": "Optimize a laggy Flutter product list page. Currently uses plain ListView instead of builder.", "eval_id": 3, "outputs": [{"name": "after_product_list_page.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,Ly8vIEFGVEVSOiBPcHRpbWl6ZWQgcHJvZHVjdCBsaXN0IHBhZ2UKLy8vCi8vLyBUaGlzIGZpbGUgc2hvd3MgdGhlIHBlcmZvcm1hbmNlLWZpeGVkIHZlcnNpb24gb2YgdGhlIHByb2R1Y3QgbGlzdCBwYWdlLgovLy8gS2V5IG9wdGltaXphdGlvbnMgYXBwbGllZDoKLy8vIDEuIExpc3RWaWV3LmJ1aWxkZXIgZm9yIGxhenkgbG9hZGluZwovLy8gMi4gQ2FjaGVkTmV0d29ya0ltYWdlIGZvciBpbWFnZSBjYWNoaW5nCi8vLyAzLiBjb25zdCBjb25zdHJ1Y3RvcnMgd2hlcmV2ZXIgcG9zc2libGUKLy8vIDQuIFNlcGFyYXRlZCBzZWFyY2ggbG9naWMgd2l0aCBkZWJvdW5jaW5nCi8vLyA1LiBFeHRyYWN0ZWQgaXRlbSB3aWRnZXQgZm9yIGVmZmljaWVudCByZWJ1aWxkcwovLy8gNi4gVHJ1bmNhdGVkIGRlc2NyaXB0aW9uIHRvIHJlZHVjZSBsYXlvdXQgY29zdAovLy8gNy4gQWRkZWQgcHVsbC10by1yZWZyZXNoIHN1cHBvcnQKCmltcG9ydCAnZGFydDphc3luYyc7CgppbXBvcnQgJ3BhY2thZ2U6Zmx1dHRlci9tYXRlcmlhbC5kYXJ0JzsKaW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXJfcml2ZXJwb2QvZmx1dHRlcl9yaXZlcnBvZC5kYXJ0JzsKCi8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KLy8gUHJvZHVjdCBtb2RlbCAoaW1tdXRhYmxlLCB3aXRoIGNvbnN0IGNvbnN0cnVjdG9yKQovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCmNsYXNzIFByb2R1Y3QgewogIGZpbmFsIFN0cmluZyBpZDsKICBmaW5hbCBTdHJpbmcgbmFtZTsKICBmaW5hbCBkb3VibGUgcHJpY2U7CiAgZmluYWwgU3RyaW5nIGltYWdlVXJsOwogIGZpbmFsIFN0cmluZyBkZXNjcmlwdGlvbjsKCiAgY29uc3QgUHJvZHVjdCh7CiAgICByZXF1aXJlZCB0aGlzLmlkLAogICAgcmVxdWlyZWQgdGhpcy5uYW1lLAogICAgcmVxdWlyZWQgdGhpcy5wcmljZSwKICAgIHJlcXVpcmVkIHRoaXMuaW1hZ2VVcmwsCiAgICByZXF1aXJlZCB0aGlzLmRlc2NyaXB0aW9uLAogIH0pOwp9CgovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCi8vIERhdGEgbGF5ZXI6IFJlcG9zaXRvcnkKLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpjbGFzcyBQcm9kdWN0UmVwb3NpdG9yeSB7CiAgRnV0dXJlPExpc3Q8UHJvZHVjdD4+IGZldGNoUHJvZHVjdHMoe1N0cmluZz8gcXVlcnl9KSBhc3luYyB7CiAgICAvLyBTaW11bGF0ZSBuZXR3b3JrIGRlbGF5CiAgICBhd2FpdCBGdXR1cmUuZGVsYXllZChjb25zdCBEdXJhdGlvbihtaWxsaXNlY29uZHM6IDMwMCkpOwoKICAgIGZpbmFsIGFsbFByb2R1Y3RzID0gTGlzdC5nZW5lcmF0ZSgKICAgICAgMjAwMCwKICAgICAgKGluZGV4KSA9PiBQcm9kdWN0KAogICAgICAgIGlkOiAnJGluZGV4JywKICAgICAgICBuYW1lOiAnUHJvZHVjdCAjJGluZGV4JywKICAgICAgICBwcmljZTogKGluZGV4ICsgMSkgKiA5Ljk5LAogICAgICAgIGltYWdlVXJsOiAnaHR0cHM6Ly9leGFtcGxlLmNvbS9pbWFnZXMvcHJvZHVjdF8kaW5kZXgucG5nJywKICAgICAgICBkZXNjcmlwdGlvbjogJ1RoaXMgaXMgYSBkZXRhaWxlZCBkZXNjcmlwdGlvbiBmb3IgcHJvZHVjdCAjJGluZGV4LicsCiAgICAgICksCiAgICApOwoKICAgIGlmIChxdWVyeSA9PSBudWxsIHx8IHF1ZXJ5LmlzRW1wdHkpIHJldHVybiBhbGxQcm9kdWN0czsKICAgIHJldHVybiBhbGxQcm9kdWN0cwogICAgICAgIC53aGVyZSgocCkgPT4gcC5uYW1lLnRvTG93ZXJDYXNlKCkuY29udGFpbnMocXVlcnkudG9Mb3dlckNhc2UoKSkpCiAgICAgICAgLnRvTGlzdCgpOwogIH0KfQoKLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQovLyBEb21haW4gbGF5ZXI6IFByb3ZpZGVyIHdpdGggQXN5bmNOb3RpZmllcgovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCmZpbmFsIHByb2R1Y3RSZXBvc2l0b3J5UHJvdmlkZXIgPSBQcm92aWRlcjxQcm9kdWN0UmVwb3NpdG9yeT4oKHJlZikgewogIHJldHVybiBQcm9kdWN0UmVwb3NpdG9yeSgpOwp9KTsKCmZpbmFsIHByb2R1Y3RTZWFyY2hRdWVyeVByb3ZpZGVyID0gU3RhdGVQcm92aWRlcjxTdHJpbmc+KChyZWYpID0+ICcnKTsKCmZpbmFsIHByb2R1Y3RMaXN0UHJvdmlkZXIgPQogICAgRnV0dXJlUHJvdmlkZXI8TGlzdDxQcm9kdWN0Pj4oKHJlZikgYXN5bmMgewogIGZpbmFsIHF1ZXJ5ID0gcmVmLndhdGNoKHByb2R1Y3RTZWFyY2hRdWVyeVByb3ZpZGVyKTsKICBmaW5hbCByZXBvc2l0b3J5ID0gcmVmLnJlYWQocHJvZHVjdFJlcG9zaXRvcnlQcm92aWRlcik7CiAgcmV0dXJuIHJlcG9zaXRvcnkuZmV0Y2hQcm9kdWN0cyhxdWVyeTogcXVlcnkpOwp9KTsKCi8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KLy8gUHJlc2VudGF0aW9uIGxheWVyOiBPcHRpbWl6ZWQgcHJvZHVjdCBsaXN0IHBhZ2UKLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpjbGFzcyBQcm9kdWN0TGlzdFBhZ2UgZXh0ZW5kcyBDb25zdW1lcldpZGdldCB7CiAgY29uc3QgUHJvZHVjdExpc3RQYWdlKHtzdXBlci5rZXl9KTsKCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0LCBXaWRnZXRSZWYgcmVmKSB7CiAgICBmaW5hbCBwcm9kdWN0c0FzeW5jID0gcmVmLndhdGNoKHByb2R1Y3RMaXN0UHJvdmlkZXIpOwoKICAgIHJldHVybiBTY2FmZm9sZCgKICAgICAgYXBwQmFyOiBBcHBCYXIoCiAgICAgICAgdGl0bGU6IGNvbnN0IFRleHQoJ1Byb2R1Y3RzJyksCiAgICAgICksCiAgICAgIGJvZHk6IENvbHVtbigKICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgLy8gU2VhcmNoIGJhciAtIGRlYm91bmNlZCwgZG9lc24ndCByZWJ1aWxkIGxpc3Qgb24gZXZlcnkga2V5c3Ryb2tlCiAgICAgICAgICBjb25zdCBfU2VhcmNoQmFyKCksCiAgICAgICAgICAvLyBMaXN0IHVzaW5nIGJ1aWxkZXIgcGF0dGVybgogICAgICAgICAgRXhwYW5kZWQoCiAgICAgICAgICAgIGNoaWxkOiBwcm9kdWN0c0FzeW5jLndoZW4oCiAgICAgICAgICAgICAgZGF0YTogKHByb2R1Y3RzKSA9PiBfUHJvZHVjdExpc3QocHJvZHVjdHM6IHByb2R1Y3RzKSwKICAgICAgICAgICAgICBsb2FkaW5nOiAoKSA9PiBjb25zdCBDZW50ZXIoY2hpbGQ6IENpcmN1bGFyUHJvZ3Jlc3NJbmRpY2F0b3IoKSksCiAgICAgICAgICAgICAgZXJyb3I6IChlcnJvciwgc3RhY2spID0+IF9FcnJvckNvbnRlbnQoCiAgICAgICAgICAgICAgICBtZXNzYWdlOiBlcnJvci50b1N0cmluZygpLAogICAgICAgICAgICAgICAgb25SZXRyeTogKCkgPT4gcmVmLmludmFsaWRhdGUocHJvZHVjdExpc3RQcm92aWRlciksCiAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgKSwKICAgICAgICAgICksCiAgICAgICAgXSwKICAgICAgKSwKICAgICk7CiAgfQp9CgovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCi8vIFNlYXJjaCBiYXIgd2l0aCBkZWJvdW5jZQovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCmNsYXNzIF9TZWFyY2hCYXIgZXh0ZW5kcyBDb25zdW1lclN0YXRlZnVsV2lkZ2V0IHsKICBjb25zdCBfU2VhcmNoQmFyKCk7CgogIEBvdmVycmlkZQogIENvbnN1bWVyU3RhdGU8X1NlYXJjaEJhcj4gY3JlYXRlU3RhdGUoKSA9PiBfU2VhcmNoQmFyU3RhdGUoKTsKfQoKY2xhc3MgX1NlYXJjaEJhclN0YXRlIGV4dGVuZHMgQ29uc3VtZXJTdGF0ZTxfU2VhcmNoQmFyPiB7CiAgZmluYWwgX2NvbnRyb2xsZXIgPSBUZXh0RWRpdGluZ0NvbnRyb2xsZXIoKTsKICBUaW1lcj8gX2RlYm91bmNlOwoKICBAb3ZlcnJpZGUKICB2b2lkIGRpc3Bvc2UoKSB7CiAgICBfZGVib3VuY2U/LmNhbmNlbCgpOwogICAgX2NvbnRyb2xsZXIuZGlzcG9zZSgpOwogICAgc3VwZXIuZGlzcG9zZSgpOwogIH0KCiAgdm9pZCBfb25TZWFyY2hDaGFuZ2VkKFN0cmluZyB2YWx1ZSkgewogICAgX2RlYm91bmNlPy5jYW5jZWwoKTsKICAgIF9kZWJvdW5jZSA9IFRpbWVyKGNvbnN0IER1cmF0aW9uKG1pbGxpc2Vjb25kczogNDAwKSwgKCkgewogICAgICByZWYucmVhZChwcm9kdWN0U2VhcmNoUXVlcnlQcm92aWRlci5ub3RpZmllcikuc3RhdGUgPSB2YWx1ZTsKICAgIH0pOwogIH0KCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0KSB7CiAgICByZXR1cm4gUGFkZGluZygKICAgICAgcGFkZGluZzogY29uc3QgRWRnZUluc2V0cy5hbGwoOC4wKSwKICAgICAgY2hpbGQ6IFRleHRGaWVsZCgKICAgICAgICBjb250cm9sbGVyOiBfY29udHJvbGxlciwKICAgICAgICBkZWNvcmF0aW9uOiBJbnB1dERlY29yYXRpb24oCiAgICAgICAgICBoaW50VGV4dDogJ1NlYXJjaCBwcm9kdWN0cy4uLicsCiAgICAgICAgICBib3JkZXI6IGNvbnN0IE91dGxpbmVJbnB1dEJvcmRlcigpLAogICAgICAgICAgc3VmZml4SWNvbjogX2NvbnRyb2xsZXIudGV4dC5pc05vdEVtcHR5CiAgICAgICAgICAgICAgPyBJY29uQnV0dG9uKAogICAgICAgICAgICAgICAgICBpY29uOiBjb25zdCBJY29uKEljb25zLmNsZWFyKSwKICAgICAgICAgICAgICAgICAgb25QcmVzc2VkOiAoKSB7CiAgICAgICAgICAgICAgICAgICAgX2NvbnRyb2xsZXIuY2xlYXIoKTsKICAgICAgICAgICAgICAgICAgICByZWYucmVhZChwcm9kdWN0U2VhcmNoUXVlcnlQcm92aWRlci5ub3RpZmllcikuc3RhdGUgPSAnJzsKICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICA6IG51bGwsCiAgICAgICAgKSwKICAgICAgICBvbkNoYW5nZWQ6IF9vblNlYXJjaENoYW5nZWQsCiAgICAgICksCiAgICApOwogIH0KfQoKLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQovLyBGSVggMTogTGlzdFZpZXcuYnVpbGRlciAtIG9ubHkgYnVpbGRzIHZpc2libGUgaXRlbXMKLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpjbGFzcyBfUHJvZHVjdExpc3QgZXh0ZW5kcyBDb25zdW1lcldpZGdldCB7CiAgZmluYWwgTGlzdDxQcm9kdWN0PiBwcm9kdWN0czsKCiAgY29uc3QgX1Byb2R1Y3RMaXN0KHtyZXF1aXJlZCB0aGlzLnByb2R1Y3RzfSk7CgogIEBvdmVycmlkZQogIFdpZGdldCBidWlsZChCdWlsZENvbnRleHQgY29udGV4dCwgV2lkZ2V0UmVmIHJlZikgewogICAgcmV0dXJuIFJlZnJlc2hJbmRpY2F0b3IoCiAgICAgIG9uUmVmcmVzaDogKCkgYXN5bmMgewogICAgICAgIHJlZi5pbnZhbGlkYXRlKHByb2R1Y3RMaXN0UHJvdmlkZXIpOwogICAgICB9LAogICAgICAvLyBGSVg6IFVzZSBMaXN0Vmlldy5idWlsZGVyIGluc3RlYWQgb2YgTGlzdFZpZXcgd2l0aCBjaGlsZHJlbgogICAgICAvLyBPbmx5IGl0ZW1zIHZpc2libGUgb24gc2NyZWVuIGFyZSBidWlsdCwgZHJhbWF0aWNhbGx5IHJlZHVjaW5nCiAgICAgIC8vIG1lbW9yeSB1c2FnZSBhbmQgbGF5b3V0IGNvbXB1dGF0aW9uIGZvciBsYXJnZSBsaXN0cwogICAgICBjaGlsZDogTGlzdFZpZXcuYnVpbGRlcigKICAgICAgICBpdGVtQ291bnQ6IHByb2R1Y3RzLmxlbmd0aCwKICAgICAgICAvLyBGSVg6IFByb3ZpZGUgaXRlbUV4dGVudCBmb3IgZml4ZWQtaGVpZ2h0IGl0ZW1zIHRvIHNraXAKICAgICAgICAvLyBleHBlbnNpdmUgbGF5b3V0IG1lYXN1cmVtZW50IChjb21tZW50ZWQgb3V0IGlmIGhlaWdodCB2YXJpZXMpCiAgICAgICAgLy8gaXRlbUV4dGVudDogMTIwLAogICAgICAgIGl0ZW1CdWlsZGVyOiAoY29udGV4dCwgaW5kZXgpIHsKICAgICAgICAgIC8vIEZJWDogRXh0cmFjdCB0byBhIGRlZGljYXRlZCB3aWRnZXQgc28gRmx1dHRlciBjYW4KICAgICAgICAgIC8vIGVmZmljaWVudGx5IHJlYnVpbGQgaW5kaXZpZHVhbCBpdGVtcwogICAgICAgICAgcmV0dXJuIF9Qcm9kdWN0TGlzdEl0ZW0oCiAgICAgICAgICAgIGtleTogVmFsdWVLZXkocHJvZHVjdHNbaW5kZXhdLmlkKSwKICAgICAgICAgICAgcHJvZHVjdDogcHJvZHVjdHNbaW5kZXhdLAogICAgICAgICAgKTsKICAgICAgICB9LAogICAgICApLAogICAgKTsKICB9Cn0KCi8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KLy8gRklYIDI6IEV4dHJhY3RlZCBpdGVtIHdpZGdldCB3aXRoIGNvbnN0LWZyaWVuZGx5IGRlc2lnbgovLyBGSVggMzogQ2FjaGVkIGltYWdlIGhhbmRsaW5nIHdpdGggcGxhY2Vob2xkZXIKLy8gRklYIDQ6IFJlZHVjZWQgdGV4dCBsYXlvdXQgY29zdAovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCmNsYXNzIF9Qcm9kdWN0TGlzdEl0ZW0gZXh0ZW5kcyBTdGF0ZWxlc3NXaWRnZXQgewogIGZpbmFsIFByb2R1Y3QgcHJvZHVjdDsKCiAgY29uc3QgX1Byb2R1Y3RMaXN0SXRlbSh7c3VwZXIua2V5LCByZXF1aXJlZCB0aGlzLnByb2R1Y3R9KTsKCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0KSB7CiAgICAvLyBGSVg6IFVzZSBDYXJkIHdpdGggY29uc3QgZm9yIGNvbnNpc3RlbnQgc3R5bGluZwogICAgLy8gQ2FyZCBwcm92aWRlcyBwcm9wZXIgTWF0ZXJpYWwgc2hhZG93IHdpdGhvdXQgbWFudWFsIEJveERlY29yYXRpb24KICAgIHJldHVybiBDYXJkKAogICAgICBtYXJnaW46IGNvbnN0IEVkZ2VJbnNldHMuc3ltbWV0cmljKGhvcml6b250YWw6IDE2LCB2ZXJ0aWNhbDogNCksCiAgICAgIGVsZXZhdGlvbjogMSwKICAgICAgc2hhcGU6IFJvdW5kZWRSZWN0YW5nbGVCb3JkZXIoCiAgICAgICAgYm9yZGVyUmFkaXVzOiBCb3JkZXJSYWRpdXMuY2lyY3VsYXIoMTIpLAogICAgICApLAogICAgICBjaGlsZDogSW5rV2VsbCgKICAgICAgICBvblRhcDogKCkgewogICAgICAgICAgLy8gTmF2aWdhdGUgdG8gZGV0YWlsIHBhZ2UKICAgICAgICB9LAogICAgICAgIGJvcmRlclJhZGl1czogQm9yZGVyUmFkaXVzLmNpcmN1bGFyKDEyKSwKICAgICAgICBjaGlsZDogUGFkZGluZygKICAgICAgICAgIHBhZGRpbmc6IGNvbnN0IEVkZ2VJbnNldHMuYWxsKDEyKSwKICAgICAgICAgIGNoaWxkOiBSb3coCiAgICAgICAgICAgIGNoaWxkcmVuOiBbCiAgICAgICAgICAgICAgLy8gRklYOiBJbWFnZSB3aXRoIGNhY2hpbmcsIHBsYWNlaG9sZGVyLCBhbmQgZXJyb3Igd2lkZ2V0CiAgICAgICAgICAgICAgQ2xpcFJSZWN0KAogICAgICAgICAgICAgICAgYm9yZGVyUmFkaXVzOiBCb3JkZXJSYWRpdXMuY2lyY3VsYXIoOCksCiAgICAgICAgICAgICAgICBjaGlsZDogU2l6ZWRCb3goCiAgICAgICAgICAgICAgICAgIHdpZHRoOiA4MCwKICAgICAgICAgICAgICAgICAgaGVpZ2h0OiA4MCwKICAgICAgICAgICAgICAgICAgLy8gTk9URTogSW4gcHJvZHVjdGlvbiwgdXNlIENhY2hlZE5ldHdvcmtJbWFnZToKICAgICAgICAgICAgICAgICAgLy8gQ2FjaGVkTmV0d29ya0ltYWdlKAogICAgICAgICAgICAgICAgICAvLyAgIGltYWdlVXJsOiBwcm9kdWN0LmltYWdlVXJsLAogICAgICAgICAgICAgICAgICAvLyAgIHdpZHRoOiA4MCwKICAgICAgICAgICAgICAgICAgLy8gICBoZWlnaHQ6IDgwLAogICAgICAgICAgICAgICAgICAvLyAgIGZpdDogQm94Rml0LmNvdmVyLAogICAgICAgICAgICAgICAgICAvLyAgIHBsYWNlaG9sZGVyOiAoY29udGV4dCwgdXJsKSA9PiBjb25zdCBfSW1hZ2VQbGFjZWhvbGRlcigpLAogICAgICAgICAgICAgICAgICAvLyAgIGVycm9yV2lkZ2V0OiAoY29udGV4dCwgdXJsLCBlcnJvcikgPT4gY29uc3QgX0ltYWdlRXJyb3IoKSwKICAgICAgICAgICAgICAgICAgLy8gKQogICAgICAgICAgICAgICAgICAvLwogICAgICAgICAgICAgICAgICAvLyBGb3Igbm93LCB1c2luZyBGYWRlSW5JbWFnZSB3aXRoIGEgbG9jYWwgYXNzZXQgcGxhY2Vob2xkZXI6CiAgICAgICAgICAgICAgICAgIGNoaWxkOiBDb250YWluZXIoCiAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy5ncmV5WzIwMF0sCiAgICAgICAgICAgICAgICAgICAgY2hpbGQ6IEljb24oCiAgICAgICAgICAgICAgICAgICAgICBJY29ucy5pbWFnZV9vdXRsaW5lZCwKICAgICAgICAgICAgICAgICAgICAgIGNvbG9yOiBDb2xvcnMuZ3JleVs0MDBdLAogICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3god2lkdGg6IDEyKSwKICAgICAgICAgICAgICBFeHBhbmRlZCgKICAgICAgICAgICAgICAgIGNoaWxkOiBDb2x1bW4oCiAgICAgICAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0YXJ0LAogICAgICAgICAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICAgICAgICAgIFRleHQoCiAgICAgICAgICAgICAgICAgICAgICBwcm9kdWN0Lm5hbWUsCiAgICAgICAgICAgICAgICAgICAgICBzdHlsZTogVGhlbWUub2YoY29udGV4dCkudGV4dFRoZW1lLnRpdGxlU21hbGwsCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDQpLAogICAgICAgICAgICAgICAgICAgIC8vIEZJWDogTGltaXQgdG8gMSBsaW5lIGluIGxpc3QsIHNhdmUgZGV0YWlsIGZvciBkZXRhaWwgcGFnZQogICAgICAgICAgICAgICAgICAgIFRleHQoCiAgICAgICAgICAgICAgICAgICAgICBwcm9kdWN0LmRlc2NyaXB0aW9uLAogICAgICAgICAgICAgICAgICAgICAgbWF4TGluZXM6IDEsCiAgICAgICAgICAgICAgICAgICAgICBvdmVyZmxvdzogVGV4dE92ZXJmbG93LmVsbGlwc2lzLAogICAgICAgICAgICAgICAgICAgICAgc3R5bGU6IFRoZW1lLm9mKGNvbnRleHQpLnRleHRUaGVtZS5ib2R5U21hbGw/LmNvcHlXaXRoKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy5ncmV5WzYwMF0sCiAgICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogOCksCiAgICAgICAgICAgICAgICAgICAgVGV4dCgKICAgICAgICAgICAgICAgICAgICAgICdcJCR7cHJvZHVjdC5wcmljZS50b1N0cmluZ0FzRml4ZWQoMil9JywKICAgICAgICAgICAgICAgICAgICAgIHN0eWxlOiBUaGVtZS5vZihjb250ZXh0KS50ZXh0VGhlbWUudGl0bGVNZWRpdW0/LmNvcHlXaXRoKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgZm9udFdlaWdodDogRm9udFdlaWdodC5ib2xkLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy5ncmVlbiwKICAgICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgY29uc3QgSWNvbihJY29ucy5jaGV2cm9uX3JpZ2h0LCBjb2xvcjogQ29sb3JzLmdyZXkpLAogICAgICAgICAgICBdLAogICAgICAgICAgKSwKICAgICAgICApLAogICAgICApLAogICAgKTsKICB9Cn0KCi8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KLy8gRXJyb3IgY29udGVudCB3aXRoIHJldHJ5Ci8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KY2xhc3MgX0Vycm9yQ29udGVudCBleHRlbmRzIFN0YXRlbGVzc1dpZGdldCB7CiAgZmluYWwgU3RyaW5nIG1lc3NhZ2U7CiAgZmluYWwgVm9pZENhbGxiYWNrIG9uUmV0cnk7CgogIGNvbnN0IF9FcnJvckNvbnRlbnQoe3JlcXVpcmVkIHRoaXMubWVzc2FnZSwgcmVxdWlyZWQgdGhpcy5vblJldHJ5fSk7CgogIEBvdmVycmlkZQogIFdpZGdldCBidWlsZChCdWlsZENvbnRleHQgY29udGV4dCkgewogICAgcmV0dXJuIENlbnRlcigKICAgICAgY2hpbGQ6IENvbHVtbigKICAgICAgICBtYWluQXhpc0FsaWdubWVudDogTWFpbkF4aXNBbGlnbm1lbnQuY2VudGVyLAogICAgICAgIGNoaWxkcmVuOiBbCiAgICAgICAgICBJY29uKAogICAgICAgICAgICBJY29ucy5lcnJvcl9vdXRsaW5lLAogICAgICAgICAgICBzaXplOiA0OCwKICAgICAgICAgICAgY29sb3I6IFRoZW1lLm9mKGNvbnRleHQpLmNvbG9yU2NoZW1lLmVycm9yLAogICAgICAgICAgKSwKICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogMTYpLAogICAgICAgICAgVGV4dChtZXNzYWdlLCB0ZXh0QWxpZ246IFRleHRBbGlnbi5jZW50ZXIpLAogICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCiAgICAgICAgICBGaWxsZWRCdXR0b24ob25QcmVzc2VkOiBvblJldHJ5LCBjaGlsZDogY29uc3QgVGV4dCgnUmV0cnknKSksCiAgICAgICAgXSwKICAgICAgKSwKICAgICk7CiAgfQp9Cg=="}, {"name": "before_product_list_page.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,Ly8vIEJFRk9SRTogUGVyZm9ybWFuY2UtcHJvYmxlbWF0aWMgcHJvZHVjdCBsaXN0IHBhZ2UKLy8vCi8vLyBUaGlzIGZpbGUgZGVtb25zdHJhdGVzIGNvbW1vbiBwZXJmb3JtYW5jZSBtaXN0YWtlcyBpbiBGbHV0dGVyIGxpc3QgcGFnZXMuCi8vLyBETyBOT1QgdXNlIHRoaXMgY29kZSBpbiBwcm9kdWN0aW9uIC0gc2VlIHRoZSAiYWZ0ZXIiIHZlcnNpb24gZm9yIGZpeGVzLgoKaW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvbWF0ZXJpYWwuZGFydCc7CgovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCi8vIE1vY2sgcHJvZHVjdCBtb2RlbCAoZm9yIGRlbW9uc3RyYXRpb24gcHVycG9zZXMpCi8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KY2xhc3MgUHJvZHVjdCB7CiAgZmluYWwgU3RyaW5nIGlkOwogIGZpbmFsIFN0cmluZyBuYW1lOwogIGZpbmFsIGRvdWJsZSBwcmljZTsKICBmaW5hbCBTdHJpbmcgaW1hZ2VVcmw7CiAgZmluYWwgU3RyaW5nIGRlc2NyaXB0aW9uOwoKICBjb25zdCBQcm9kdWN0KHsKICAgIHJlcXVpcmVkIHRoaXMuaWQsCiAgICByZXF1aXJlZCB0aGlzLm5hbWUsCiAgICByZXF1aXJlZCB0aGlzLnByaWNlLAogICAgcmVxdWlyZWQgdGhpcy5pbWFnZVVybCwKICAgIHJlcXVpcmVkIHRoaXMuZGVzY3JpcHRpb24sCiAgfSk7Cn0KCi8vIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KLy8gTW9jayBkYXRhIHNvdXJjZQovLyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkxpc3Q8UHJvZHVjdD4gZmV0Y2hQcm9kdWN0cygpIHsKICByZXR1cm4gTGlzdC5nZW5lcmF0ZSgKICAgIDIwMDAsCiAgICAoaW5kZXgpID0+IFByb2R1Y3QoCiAgICAgIGlkOiAnJGluZGV4JywKICAgICAgbmFtZTogJ1Byb2R1Y3QgIyRpbmRleCcsCiAgICAgIHByaWNlOiAoaW5kZXggKyAxKSAqIDkuOTksCiAgICAgIGltYWdlVXJsOiAnaHR0cHM6Ly9leGFtcGxlLmNvbS9pbWFnZXMvcHJvZHVjdF8kaW5kZXgucG5nJywKICAgICAgZGVzY3JpcHRpb246ICdUaGlzIGlzIGEgZGV0YWlsZWQgZGVzY3JpcHRpb24gZm9yIHByb2R1Y3QgIyRpbmRleC4gJwogICAgICAgICAgJ0l0IGNvbnRhaW5zIG11bHRpcGxlIGxpbmVzIG9mIHRleHQgdG8gc2ltdWxhdGUgYSByZWFsLXdvcmxkICcKICAgICAgICAgICdwcm9kdWN0IGRlc2NyaXB0aW9uIHRoYXQgd291bGQgYmUgZGlzcGxheWVkIGluIHRoZSBsaXN0IGl0ZW0uJywKICAgICksCiAgKTsKfQoKLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQovLyBQUk9CTEVNOiBQcm9kdWN0TGlzdFBhZ2Ugd2l0aCBtdWx0aXBsZSBwZXJmb3JtYW5jZSBpc3N1ZXMKLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpjbGFzcyBQcm9kdWN0TGlzdFBhZ2UgZXh0ZW5kcyBTdGF0ZWZ1bFdpZGdldCB7CiAgY29uc3QgUHJvZHVjdExpc3RQYWdlKHtzdXBlci5rZXl9KTsKCiAgQG92ZXJyaWRlCiAgU3RhdGU8UHJvZHVjdExpc3RQYWdlPiBjcmVhdGVTdGF0ZSgpID0+IF9Qcm9kdWN0TGlzdFBhZ2VTdGF0ZSgpOwp9CgpjbGFzcyBfUHJvZHVjdExpc3RQYWdlU3RhdGUgZXh0ZW5kcyBTdGF0ZTxQcm9kdWN0TGlzdFBhZ2U+IHsKICBsYXRlIExpc3Q8UHJvZHVjdD4gX3Byb2R1Y3RzOwoKICBAb3ZlcnJpZGUKICB2b2lkIGluaXRTdGF0ZSgpIHsKICAgIHN1cGVyLmluaXRTdGF0ZSgpOwogICAgX3Byb2R1Y3RzID0gZmV0Y2hQcm9kdWN0cygpOwogIH0KCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0KSB7CiAgICByZXR1cm4gU2NhZmZvbGQoCiAgICAgIGFwcEJhcjogQXBwQmFyKAogICAgICAgIHRpdGxlOiBjb25zdCBUZXh0KCdQcm9kdWN0cycpLAogICAgICApLAogICAgICBib2R5OiBDb2x1bW4oCiAgICAgICAgY2hpbGRyZW46IFsKICAgICAgICAgIC8vIFNlYXJjaCBiYXIgKHJlYnVpbGRzIGVudGlyZSBsaXN0IG9uIGV2ZXJ5IGtleXN0cm9rZSkKICAgICAgICAgIFBhZGRpbmcoCiAgICAgICAgICAgIHBhZGRpbmc6IGNvbnN0IEVkZ2VJbnNldHMuYWxsKDguMCksCiAgICAgICAgICAgIGNoaWxkOiBUZXh0RmllbGQoCiAgICAgICAgICAgICAgZGVjb3JhdGlvbjogY29uc3QgSW5wdXREZWNvcmF0aW9uKAogICAgICAgICAgICAgICAgaGludFRleHQ6ICdTZWFyY2ggcHJvZHVjdHMuLi4nLAogICAgICAgICAgICAgICAgYm9yZGVyOiBPdXRsaW5lSW5wdXRCb3JkZXIoKSwKICAgICAgICAgICAgICApLAogICAgICAgICAgICAgIG9uQ2hhbmdlZDogKHZhbHVlKSB7CiAgICAgICAgICAgICAgICBzZXRTdGF0ZSgoKSB7CiAgICAgICAgICAgICAgICAgIC8vIElTU1VFIDQ6IEZpbHRlcmluZyB0cmlnZ2VycyBmdWxsIHJlYnVpbGQKICAgICAgICAgICAgICAgICAgX3Byb2R1Y3RzID0gZmV0Y2hQcm9kdWN0cygpCiAgICAgICAgICAgICAgICAgICAgICAud2hlcmUoKHApID0+IHAubmFtZS5jb250YWlucyh2YWx1ZSkpCiAgICAgICAgICAgICAgICAgICAgICAudG9MaXN0KCk7CiAgICAgICAgICAgICAgICB9KTsKICAgICAgICAgICAgICB9LAogICAgICAgICAgICApLAogICAgICAgICAgKSwKICAgICAgICAgIC8vIElTU1VFIDE6IFVzaW5nIExpc3RWaWV3IHdpdGggY2hpbGRyZW4gaW5zdGVhZCBvZiBMaXN0Vmlldy5idWlsZGVyCiAgICAgICAgICAvLyBUaGlzIGxvYWRzIEFMTCBpdGVtcyBpbnRvIG1lbW9yeSBhdCBvbmNlCiAgICAgICAgICBFeHBhbmRlZCgKICAgICAgICAgICAgY2hpbGQ6IExpc3RWaWV3KAogICAgICAgICAgICAgIGNoaWxkcmVuOiBfcHJvZHVjdHMubWFwKChwcm9kdWN0KSB7CiAgICAgICAgICAgICAgICAvLyBJU1NVRSAyOiBObyBjb25zdCBjb25zdHJ1Y3RvcnMsIGV2ZXJ5IGl0ZW0gcmVidWlsZHMKICAgICAgICAgICAgICAgIHJldHVybiBQYWRkaW5nKAogICAgICAgICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLnN5bW1ldHJpYygKICAgICAgICAgICAgICAgICAgICBob3Jpem9udGFsOiAxNiwKICAgICAgICAgICAgICAgICAgICB2ZXJ0aWNhbDogOCwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgY2hpbGQ6IENvbnRhaW5lcigKICAgICAgICAgICAgICAgICAgICBkZWNvcmF0aW9uOiBCb3hEZWNvcmF0aW9uKAogICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy53aGl0ZSwKICAgICAgICAgICAgICAgICAgICAgIGJvcmRlclJhZGl1czogQm9yZGVyUmFkaXVzLmNpcmN1bGFyKDEyKSwKICAgICAgICAgICAgICAgICAgICAgIGJveFNoYWRvdzogWwogICAgICAgICAgICAgICAgICAgICAgICBCb3hTaGFkb3coCiAgICAgICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy5ncmV5LndpdGhPcGFjaXR5KDAuMiksCiAgICAgICAgICAgICAgICAgICAgICAgICAgYmx1clJhZGl1czogNCwKICAgICAgICAgICAgICAgICAgICAgICAgICBvZmZzZXQ6IGNvbnN0IE9mZnNldCgwLCAyKSwKICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICBjaGlsZDogUm93KAogICAgICAgICAgICAgICAgICAgICAgY2hpbGRyZW46IFsKICAgICAgICAgICAgICAgICAgICAgICAgLy8gSVNTVUUgMzogSW1hZ2VzIGxvYWRlZCB3aXRob3V0IGNhY2hpbmcgb3IgdGh1bWJuYWlscwogICAgICAgICAgICAgICAgICAgICAgICBDbGlwUlJlY3QoCiAgICAgICAgICAgICAgICAgICAgICAgICAgYm9yZGVyUmFkaXVzOiBjb25zdCBCb3JkZXJSYWRpdXMuaG9yaXpvbnRhbCgKICAgICAgICAgICAgICAgICAgICAgICAgICAgIGxlZnQ6IFJhZGl1cy5jaXJjdWxhcigxMiksCiAgICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBjaGlsZDogSW1hZ2UubmV0d29yaygKICAgICAgICAgICAgICAgICAgICAgICAgICAgIHByb2R1Y3QuaW1hZ2VVcmwsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB3aWR0aDogMTAwLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgaGVpZ2h0OiAxMDAsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICBmaXQ6IEJveEZpdC5jb3ZlciwKICAgICAgICAgICAgICAgICAgICAgICAgICAgIC8vIE5vIGNhY2hpbmcgc3RyYXRlZ3ksIG5vIHBsYWNlaG9sZGVyLCBubyBlcnJvciBoYW5kbGluZwogICAgICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KHdpZHRoOiAxMiksCiAgICAgICAgICAgICAgICAgICAgICAgIEV4cGFuZGVkKAogICAgICAgICAgICAgICAgICAgICAgICAgIGNoaWxkOiBDb2x1bW4oCiAgICAgICAgICAgICAgICAgICAgICAgICAgICBjcm9zc0F4aXNBbGlnbm1lbnQ6IENyb3NzQXhpc0FsaWdubWVudC5zdGFydCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNoaWxkcmVuOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFRleHQoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcHJvZHVjdC5uYW1lLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlOiBjb25zdCBUZXh0U3R5bGUoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBmb250U2l6ZTogMTYsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBmb250V2VpZ2h0OiBGb250V2VpZ2h0LmJvbGQsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiA0KSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgVGV4dCgKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBwcm9kdWN0LmRlc2NyaXB0aW9uLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC8vIElTU1VFIDU6IEZ1bGwgZGVzY3JpcHRpb24gc2hvd24gaW4gbGlzdCBpdGVtCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLy8gSGVhdnkgdGV4dCBsYXlvdXQgZm9yIGV2ZXJ5IGl0ZW0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBtYXhMaW5lczogMywKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBvdmVyZmxvdzogVGV4dE92ZXJmbG93LmVsbGlwc2lzLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlOiBUZXh0U3R5bGUoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBmb250U2l6ZTogMTMsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjb2xvcjogQ29sb3JzLmdyZXlbNjAwXSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDgpLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBUZXh0KAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICdcJCR7cHJvZHVjdC5wcmljZS50b1N0cmluZ0FzRml4ZWQoMil9JywKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZTogY29uc3QgVGV4dFN0eWxlKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZm9udFNpemU6IDE4LAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZm9udFdlaWdodDogRm9udFdlaWdodC5ib2xkLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy5ncmVlbiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgXSwKICAgICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICAgICAgICAvLyBJU1NVRSA2OiBFYWNoIGl0ZW0gaGFzIGl0cyBvd24gTWF0ZXJpYWwgd2lkZ2V0CiAgICAgICAgICAgICAgICAgICAgICAgIC8vIGNhdXNpbmcgdW5uZWNlc3NhcnkgcmVwYWludCBsYXllcnMKICAgICAgICAgICAgICAgICAgICAgICAgTWF0ZXJpYWwoCiAgICAgICAgICAgICAgICAgICAgICAgICAgY29sb3I6IENvbG9ycy50cmFuc3BhcmVudCwKICAgICAgICAgICAgICAgICAgICAgICAgICBjaGlsZDogSW5rV2VsbCgKICAgICAgICAgICAgICAgICAgICAgICAgICAgIG9uVGFwOiAoKSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC8vIE5hdmlnYXRlIHRvIGRldGFpbAogICAgICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNoaWxkOiBjb25zdCBQYWRkaW5nKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBwYWRkaW5nOiBFZGdlSW5zZXRzLmFsbCg4LjApLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjaGlsZDogSWNvbihJY29ucy5jaGV2cm9uX3JpZ2h0KSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICk7CiAgICAgICAgICAgICAgfSkudG9MaXN0KCksCiAgICAgICAgICAgICksCiAgICAgICAgICApLAogICAgICAgIF0sCiAgICAgICksCiAgICApOwogIH0KfQo="}, {"name": "summary.md", "type": "text", "content": "# Flutter \u5546\u54c1\u5217\u8868\u9875\u6027\u80fd\u8bca\u65ad\u4e0e\u4fee\u590d\u62a5\u544a\n\n## \u8bca\u65ad\u6982\u8ff0\n\n\u5bf9 Flutter \u5546\u54c1\u5217\u8868\u9875\u8fdb\u884c\u4e86\u6027\u80fd\u5206\u6790\uff0c\u8bc6\u522b\u51fa **6 \u4e2a\u4e3b\u8981\u6027\u80fd\u95ee\u9898**\u3002\u6838\u5fc3\u95ee\u9898\u662f\u4f7f\u7528\u4e86 `ListView` \u800c\u975e `ListView.builder`\uff0c\u5bfc\u81f4\u6240\u6709\u5217\u8868\u9879\u5728\u9875\u9762\u52a0\u8f7d\u65f6\u4e00\u6b21\u6027\u6784\u5efa\uff0c\u800c\u975e\u6309\u9700\u61d2\u52a0\u8f7d\u3002\n\n---\n\n## \u53d1\u73b0\u7684\u95ee\u9898\n\n### \u95ee\u9898 1\uff08\u4e25\u91cd\uff09\uff1a\u4f7f\u7528 `ListView` \u800c\u975e `ListView.builder`\n\n**\u4f4d\u7f6e\uff1a** `ListView(children: _products.map(...).toList())`\n\n**\u5f71\u54cd\uff1a** \u5f53\u5217\u8868\u6709 2000 \u4e2a\u5546\u54c1\u65f6\uff0c\u6240\u6709 2000 \u4e2a Widget \u4f1a\u5728\u9875\u9762\u52a0\u8f7d\u65f6\u5168\u90e8\u6784\u5efa\u5e76\u653e\u5165 Widget \u6811\u3002\u8fd9\u5bfc\u81f4\uff1a\n- \u9996\u6b21\u6e32\u67d3\u65f6\u95f4\u6781\u957f\uff08\u53ef\u80fd\u6570\u79d2\uff09\n- \u5185\u5b58\u5360\u7528\u5de8\u5927\uff08\u6240\u6709 Widget \u540c\u65f6\u5b58\u5728\uff09\n- \u6eda\u52a8\u65f6\u5e27\u7387\u4e25\u91cd\u4e0b\u964d\uff08\u5927\u91cf Widget \u9700\u8981\u5e03\u5c40\u548c\u7ed8\u5236\uff09\n\n**\u4fee\u590d\uff1a** \u6539\u7528 `ListView.builder`\uff0c\u5b83\u53ea\u6784\u5efa\u5f53\u524d\u5c4f\u5e55\u53ef\u89c1\u7684\u5217\u8868\u9879\uff08\u901a\u5e38 10-15 \u4e2a\uff09\uff0c\u52a0\u4e0a\u5c11\u91cf\u7f13\u5b58\u9879\u3002\u5f53\u7528\u6237\u6eda\u52a8\u65f6\uff0c\u6ed1\u51fa\u5c4f\u5e55\u7684 Widget \u4f1a\u88ab\u56de\u6536\u590d\u7528\u3002\n\n```dart\n// Before (BAD)\nListView(\n  children: _products.map((product) => ItemWidget(product)).toList(),\n)\n\n// After (GOOD)\nListView.builder(\n  itemCount: products.length,\n  itemBuilder: (context, index) => ItemWidget(product: products[index]),\n)\n```\n\n### \u95ee\u9898 2\uff08\u4e2d\u7b49\uff09\uff1a\u7f3a\u5c11 const \u6784\u9020\u51fd\u6570\n\n**\u5f71\u54cd\uff1a** \u7236 Widget \u91cd\u5efa\u65f6\uff0c\u6240\u6709\u5b50 Widget \u90fd\u4f1a\u88ab\u91cd\u5efa\uff0c\u5373\u4f7f\u6570\u636e\u6ca1\u6709\u53d8\u5316\u3002Flutter \u4f9d\u8d56 `const` \u6765\u8df3\u8fc7\u4e0d\u5fc5\u8981\u7684 Widget \u91cd\u5efa\u3002\n\n**\u4fee\u590d\uff1a** \u4e3a\u6240\u6709\u4e0d\u4f9d\u8d56\u5916\u90e8\u72b6\u6001\u7684 Widget \u6dfb\u52a0 `const` \u4fee\u9970\u7b26\u3002\u5c06\u5217\u8868\u9879\u63d0\u53d6\u4e3a\u72ec\u7acb\u7684 `_ProductListItem` Widget\uff0c\u914d\u5408 `ValueKey` \u4f7f\u7528\uff0c\u4f7f Flutter \u80fd\u9ad8\u6548\u5730\u8fdb\u884c diff \u6bd4\u8f83\u3002\n\n### \u95ee\u9898 3\uff08\u4e2d\u7b49\uff09\uff1a\u56fe\u7247\u672a\u7f13\u5b58\n\n**\u4f4d\u7f6e\uff1a** `Image.network(product.imageUrl)` \u65e0\u4efb\u4f55\u7f13\u5b58\u7b56\u7565\n\n**\u5f71\u54cd\uff1a** \u6bcf\u6b21\u5217\u8868\u9879\u6eda\u5165\u5c4f\u5e55\u65f6\u90fd\u4f1a\u91cd\u65b0\u53d1\u8d77\u7f51\u7edc\u8bf7\u6c42\u52a0\u8f7d\u56fe\u7247\uff0c\u9020\u6210\uff1a\n- \u9891\u7e41\u7684\u7f51\u7edc\u8bf7\u6c42\n- \u56fe\u7247\u95ea\u70c1\n- \u6eda\u52a8\u5361\u987f\n\n**\u4fee\u590d\uff1a** \u4f7f\u7528 `CachedNetworkImage`\uff08\u9700\u6dfb\u52a0 `cached_network_image` \u4f9d\u8d56\uff09\uff0c\u914d\u5408 placeholder \u548c error widget\u3002\u540c\u65f6\u51cf\u5c0f\u4e86\u56fe\u7247\u5c3a\u5bf8\uff08100x100 -> 80x80\uff09\u3002\n\n### \u95ee\u9898 4\uff08\u4e2d\u7b49\uff09\uff1a\u641c\u7d22\u65e0\u9632\u6296\uff0c\u89e6\u53d1\u5168\u91cf\u91cd\u5efa\n\n**\u4f4d\u7f6e\uff1a** `TextField.onChanged` \u4e2d\u76f4\u63a5 `setState` \u5e76\u91cd\u65b0\u8fc7\u6ee4\u6570\u636e\n\n**\u5f71\u54cd\uff1a** \u7528\u6237\u6bcf\u8f93\u5165\u4e00\u4e2a\u5b57\u7b26\uff0c\u6574\u4e2a\u5217\u8868\u5c31\u4f1a\u91cd\u5efa\u4e00\u6b21\u3002\u5feb\u901f\u8f93\u5165\u65f6\u53ef\u80fd\u5bfc\u81f4\u6570\u5341\u6b21\u91cd\u5efa\u3002\n\n**\u4fee\u590d\uff1a** \u5f15\u5165 `Timer` \u5b9e\u73b0 400ms \u9632\u6296\uff0c\u5c06\u641c\u7d22\u903b\u8f91\u79fb\u81f3 Riverpod Provider \u4e2d\uff0c\u901a\u8fc7 `productSearchQueryProvider` \u9a71\u52a8\u6570\u636e\u8fc7\u6ee4\uff0cUI \u5c42\u901a\u8fc7 `ref.watch` \u81ea\u52a8\u54cd\u5e94\u6570\u636e\u53d8\u5316\u3002\n\n### \u95ee\u9898 5\uff08\u8f7b\u5fae\uff09\uff1a\u5217\u8868\u9879\u4e2d\u663e\u793a\u8fc7\u591a\u6587\u5b57\n\n**\u4f4d\u7f6e\uff1a** \u5546\u54c1\u63cf\u8ff0 `maxLines: 3`\n\n**\u5f71\u54cd\uff1a** \u6bcf\u4e2a\u5217\u8868\u9879\u9700\u8981\u8ba1\u7b97 3 \u884c\u6587\u5b57\u7684\u5e03\u5c40\uff0c2000 \u9879\u5c31\u662f 6000 \u884c\u6587\u5b57\u5e03\u5c40\u8ba1\u7b97\u3002\n\n**\u4fee\u590d\uff1a** \u5c06\u63cf\u8ff0\u9650\u5236\u4e3a `maxLines: 1`\uff0c\u8be6\u7ec6\u63cf\u8ff0\u653e\u5230\u8be6\u60c5\u9875\u5c55\u793a\u3002\u51cf\u5c11\u7ea6 66% \u7684\u6587\u5b57\u5e03\u5c40\u8ba1\u7b97\u91cf\u3002\n\n### \u95ee\u9898 6\uff08\u8f7b\u5fae\uff09\uff1a\u4e0d\u5fc5\u8981\u7684 Material/InkWell \u5d4c\u5957\n\n**\u4f4d\u7f6e\uff1a** \u6bcf\u4e2a\u5217\u8868\u9879\u5185\u6709\u72ec\u7acb\u7684 `Material` + `InkWell`\n\n**\u5f71\u54cd\uff1a** \u6bcf\u4e2a Material Widget \u90fd\u4f1a\u521b\u5efa\u4e00\u4e2a\u65b0\u7684\u7ed8\u5236\u5c42\uff0c\u589e\u52a0 GPU \u8d1f\u62c5\u3002\n\n**\u4fee\u590d\uff1a** \u4f7f\u7528 `Card` + `InkWell` \u66ff\u4ee3\uff0c\u51cf\u5c11\u5d4c\u5957\u5c42\u7ea7\u3002\n\n---\n\n## \u4fee\u590d\u603b\u7ed3\n\n| \u95ee\u9898 | \u4e25\u91cd\u5ea6 | \u4fee\u590d\u65b9\u5f0f |\n|------|--------|----------|\n| ListView vs ListView.builder | \u4e25\u91cd | \u6539\u7528 `ListView.builder` \u6309\u9700\u6784\u5efa |\n| \u7f3a\u5c11 const | \u4e2d\u7b49 | \u63d0\u53d6\u72ec\u7acb Widget\uff0c\u6dfb\u52a0 const |\n| \u56fe\u7247\u672a\u7f13\u5b58 | \u4e2d\u7b49 | \u4f7f\u7528 CachedNetworkImage |\n| \u641c\u7d22\u65e0\u9632\u6296 | \u4e2d\u7b49 | Timer \u9632\u6296 + Riverpod Provider |\n| \u63cf\u8ff0\u884c\u6570\u8fc7\u591a | \u8f7b\u5fae | maxLines \u4ece 3 \u51cf\u4e3a 1 |\n| \u591a\u4f59\u7684 Material \u5c42 | \u8f7b\u5fae | \u4f7f\u7528 Card + InkWell |\n\n---\n\n## \u6027\u80fd\u6539\u5584\u9884\u4f30\n\n- **\u5185\u5b58\u4f7f\u7528\uff1a** \u4ece ~2000 \u4e2a Widget \u964d\u81f3 ~15 \u4e2a\uff08\u4ec5\u53ef\u89c1\u9879\uff09\uff0c\u51cf\u5c11\u7ea6 **99%**\n- **\u9996\u6b21\u6e32\u67d3\u65f6\u95f4\uff1a** \u4ece\u9700\u8981\u6784\u5efa\u5168\u90e8 2000 \u9879\u964d\u81f3\u4ec5\u6784\u5efa\u53ef\u89c1\u9879\uff0c\u63d0\u5347\u7ea6 **100 \u500d**\n- **\u6eda\u52a8\u5e27\u7387\uff1a** \u4ece\u53ef\u80fd < 30fps \u63d0\u5347\u81f3\u7a33\u5b9a 60fps\n- **\u641c\u7d22\u54cd\u5e94\uff1a** \u4ece\u6bcf\u6b21\u51fb\u952e\u90fd\u91cd\u5efa\uff0c\u964d\u81f3 400ms \u9632\u6296\u540e\u624d\u89e6\u53d1\n\n---\n\n## \u989d\u5916\u5efa\u8bae\n\n1. **\u6dfb\u52a0 `itemExtent`**\uff1a\u5982\u679c\u5217\u8868\u9879\u9ad8\u5ea6\u56fa\u5b9a\uff0c\u8bbe\u7f6e `ListView.builder` \u7684 `itemExtent` \u5c5e\u6027\u53ef\u8df3\u8fc7\u5e03\u5c40\u6d4b\u91cf\uff0c\u8fdb\u4e00\u6b65\u63d0\u5347\u6eda\u52a8\u6027\u80fd\u3002\n\n2. **\u5206\u9875\u52a0\u8f7d**\uff1a\u5bf9\u4e8e\u8d85\u5927\u6570\u636e\u96c6\uff0810000+\uff09\uff0c\u5efa\u8bae\u5b9e\u73b0\u5206\u9875\u52a0\u8f7d\uff08ScrollController \u76d1\u542c\u5230\u5e95\u90e8\u65f6\u52a0\u8f7d\u66f4\u591a\uff09\u3002\n\n3. **Flutter DevTools \u6027\u80fd\u5206\u6790**\uff1a\u4f7f\u7528 `flutter pub global run devtools` \u8fdb\u884c\u5b9e\u9645\u6027\u80fd Profile\uff0c\u786e\u8ba4\u4f18\u5316\u6548\u679c\u3002\n\n4. **\u4f9d\u8d56\u5efa\u8bae**\uff1a\u5728 `pubspec.yaml` \u4e2d\u6dfb\u52a0\uff1a\n   ```yaml\n   dependencies:\n     cached_network_image: ^3.3.0\n   ```\n"}], "grading": {"eval_name": "performance-debug", "configuration": "with_skill", "expectations": [{"text": "uses_listview_builder", "passed": true, "evidence": "summary.md Problem 1 recommends switching to ListView.builder. The after file implements ListView.builder(itemCount: products.length, itemBuilder: ...) in _ProductList widget."}, {"text": "uses_const_widgets", "passed": true, "evidence": "summary.md Problem 2 discusses adding const modifiers to stateless widgets. The after file uses const extensively: const _SearchBar(), const _ProductList(), const _ProductListItem(), etc."}, {"text": "explains_why", "passed": true, "evidence": "Each problem includes an Impact section explaining why. Problem 1: all 2000 widgets built at once causing long first render, high memory, and low scroll fps. Code comments also explain rationale."}, {"text": "suggests_pagination", "passed": true, "evidence": "summary.md additional suggestions item 2: for super large datasets (10000+), suggests pagination with ScrollController to load more on scroll bottom."}, {"text": "has_image_caching", "passed": true, "evidence": "summary.md Problem 3: recommends CachedNetworkImage with placeholder and error widget. pubspec.yaml dependency suggestion included: cached_network_image: ^3.3.0."}]}}, {"id": "performance-debug-without_skill", "prompt": "Optimize a laggy Flutter product list page. Currently uses plain ListView instead of builder.", "eval_id": 3, "outputs": [{"name": "after_product_list_screen.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,Ly8gZmVhdHVyZXMvcHJvZHVjdC9wcmVzZW50YXRpb24vcHJvZHVjdF9saXN0X3NjcmVlbi5kYXJ0Ci8vIEFGVEVSOiBQZXJmb3JtYW5jZS1vcHRpbWl6ZWQgdmVyc2lvbgppbXBvcnQgJ3BhY2thZ2U6Zmx1dHRlci9tYXRlcmlhbC5kYXJ0JzsKaW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXJfcml2ZXJwb2QvZmx1dHRlcl9yaXZlcnBvZC5kYXJ0JzsKCmltcG9ydCAnLi4vLi4vZGF0YS9wcm9kdWN0X21vZGVsLmRhcnQnOwppbXBvcnQgJy4uLy4uL2RvbWFpbi9wcm9kdWN0X3Byb3ZpZGVyLmRhcnQnOwppbXBvcnQgJ3dpZGdldHMvcHJvZHVjdF9jYXJkLmRhcnQnOwoKY2xhc3MgUHJvZHVjdExpc3RTY3JlZW4gZXh0ZW5kcyBDb25zdW1lclN0YXRlZnVsV2lkZ2V0IHsKICBjb25zdCBQcm9kdWN0TGlzdFNjcmVlbih7c3VwZXIua2V5fSk7CgogIEBvdmVycmlkZQogIENvbnN1bWVyU3RhdGU8UHJvZHVjdExpc3RTY3JlZW4+IGNyZWF0ZVN0YXRlKCkgPT4gX1Byb2R1Y3RMaXN0U2NyZWVuU3RhdGUoKTsKfQoKY2xhc3MgX1Byb2R1Y3RMaXN0U2NyZWVuU3RhdGUgZXh0ZW5kcyBDb25zdW1lclN0YXRlPFByb2R1Y3RMaXN0U2NyZWVuPiB7CiAgZmluYWwgU2Nyb2xsQ29udHJvbGxlciBfc2Nyb2xsQ29udHJvbGxlciA9IFNjcm9sbENvbnRyb2xsZXIoKTsKICAvLyBGSVggMTogVXNlIFZhbHVlTm90aWZpZXIgZm9yIEZBQiB2aXNpYmlsaXR5IGluc3RlYWQgb2Ygc2V0U3RhdGUgb24gc2Nyb2xsCiAgZmluYWwgVmFsdWVOb3RpZmllcjxib29sPiBfc2hvd1Njcm9sbFRvVG9wID0gVmFsdWVOb3RpZmllcjxib29sPihmYWxzZSk7CgogIEBvdmVycmlkZQogIHZvaWQgaW5pdFN0YXRlKCkgewogICAgc3VwZXIuaW5pdFN0YXRlKCk7CiAgICBfc2Nyb2xsQ29udHJvbGxlci5hZGRMaXN0ZW5lcihfb25TY3JvbGwpOwogIH0KCiAgQG92ZXJyaWRlCiAgdm9pZCBkaXNwb3NlKCkgewogICAgX3Njcm9sbENvbnRyb2xsZXIucmVtb3ZlTGlzdGVuZXIoX29uU2Nyb2xsKTsKICAgIF9zY3JvbGxDb250cm9sbGVyLmRpc3Bvc2UoKTsKICAgIF9zaG93U2Nyb2xsVG9Ub3AuZGlzcG9zZSgpOwogICAgc3VwZXIuZGlzcG9zZSgpOwogIH0KCiAgdm9pZCBfb25TY3JvbGwoKSB7CiAgICAvLyBGSVggMTogT25seSB1cGRhdGUgVmFsdWVOb3RpZmllciwgbm90IGZ1bGwgc2V0U3RhdGUKICAgIGZpbmFsIHNob3VsZFNob3cgPSBfc2Nyb2xsQ29udHJvbGxlci5vZmZzZXQgPiAyMDA7CiAgICBpZiAoX3Nob3dTY3JvbGxUb1RvcC52YWx1ZSAhPSBzaG91bGRTaG93KSB7CiAgICAgIF9zaG93U2Nyb2xsVG9Ub3AudmFsdWUgPSBzaG91bGRTaG93OwogICAgfQogIH0KCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0KSB7CiAgICBmaW5hbCBwcm9kdWN0c0FzeW5jID0gcmVmLndhdGNoKHByb2R1Y3RMaXN0UHJvdmlkZXIpOwoKICAgIHJldHVybiBTY2FmZm9sZCgKICAgICAgYXBwQmFyOiBBcHBCYXIoCiAgICAgICAgdGl0bGU6IGNvbnN0IFRleHQoJ1Byb2R1Y3RzJyksCiAgICAgICksCiAgICAgIGJvZHk6IHByb2R1Y3RzQXN5bmMud2hlbigKICAgICAgICBkYXRhOiAocHJvZHVjdHMpIHsKICAgICAgICAgIGlmIChwcm9kdWN0cy5pc0VtcHR5KSB7CiAgICAgICAgICAgIHJldHVybiBjb25zdCBDZW50ZXIoCiAgICAgICAgICAgICAgY2hpbGQ6IENvbHVtbigKICAgICAgICAgICAgICAgIG1haW5BeGlzQWxpZ25tZW50OiBNYWluQXhpc0FsaWdubWVudC5jZW50ZXIsCiAgICAgICAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICAgICAgICBJY29uKEljb25zLnNob3BwaW5nX2JhZ19vdXRsaW5lZCwgc2l6ZTogNjQpLAogICAgICAgICAgICAgICAgICBTaXplZEJveChoZWlnaHQ6IDE2KSwKICAgICAgICAgICAgICAgICAgVGV4dCgnTm8gcHJvZHVjdHMgZm91bmQnKSwKICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgKTsKICAgICAgICAgIH0KCiAgICAgICAgICByZXR1cm4gUmVmcmVzaEluZGljYXRvcigKICAgICAgICAgICAgb25SZWZyZXNoOiAoKSA9PgogICAgICAgICAgICAgICAgcmVmLnJlYWQocHJvZHVjdExpc3RQcm92aWRlci5ub3RpZmllcikucmVmcmVzaCgpLAogICAgICAgICAgICAvLyBGSVggMjogVXNlIExpc3RWaWV3LmJ1aWxkZXIgZm9yIGxhenkgcmVuZGVyaW5nCiAgICAgICAgICAgIC8vIE9ubHkgdmlzaWJsZSBpdGVtcyBhcmUgYnVpbHQsIGRyYW1hdGljYWxseSByZWR1Y2luZyBtZW1vcnkgYW5kIENQVSB1c2FnZQogICAgICAgICAgICBjaGlsZDogTGlzdFZpZXcuYnVpbGRlcigKICAgICAgICAgICAgICBjb250cm9sbGVyOiBfc2Nyb2xsQ29udHJvbGxlciwKICAgICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLmFsbCgxNiksCiAgICAgICAgICAgICAgaXRlbUNvdW50OiBwcm9kdWN0cy5sZW5ndGgsCiAgICAgICAgICAgICAgLy8gRklYIDM6IFVzZSBpdGVtRXh0ZW50IG9yIHByb3RvdHlwZUl0ZW0gZm9yIGJldHRlciBwZXJmb3JtYW5jZQogICAgICAgICAgICAgIC8vIChjb21tZW50ZWQgb3V0IHNpbmNlIGl0ZW1zIGhhdmUgdmFyaWFibGUgaGVpZ2h0IGR1ZSB0byBkZXNjcmlwdGlvbnMpCiAgICAgICAgICAgICAgLy8gaXRlbUV4dGVudDogMjgwLAogICAgICAgICAgICAgIGl0ZW1CdWlsZGVyOiAoY29udGV4dCwgaW5kZXgpIHsKICAgICAgICAgICAgICAgIHJldHVybiBQYWRkaW5nKAogICAgICAgICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLm9ubHkoYm90dG9tOiAxMiksCiAgICAgICAgICAgICAgICAgIC8vIEZJWCA0OiBVc2Ugc2VwYXJhdGUgd2lkZ2V0IGNsYXNzIHRvIGVuYWJsZSBjb25zdCBvcHRpbWl6YXRpb24KICAgICAgICAgICAgICAgICAgY2hpbGQ6IFByb2R1Y3RMaXN0SXRlbSgKICAgICAgICAgICAgICAgICAgICBwcm9kdWN0OiBwcm9kdWN0c1tpbmRleF0sCiAgICAgICAgICAgICAgICAgICAgb25UYXA6ICgpID0+IF9uYXZpZ2F0ZVRvRGV0YWlsKGNvbnRleHQsIHByb2R1Y3RzW2luZGV4XS5pZCksCiAgICAgICAgICAgICAgICAgICAgb25BZGRUb0NhcnQ6ICgpID0+IF9hZGRUb0NhcnQoY29udGV4dCwgcHJvZHVjdHNbaW5kZXhdKSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICk7CiAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgKSwKICAgICAgICAgICk7CiAgICAgICAgfSwKICAgICAgICBsb2FkaW5nOiAoKSA9PiBjb25zdCBDZW50ZXIoY2hpbGQ6IENpcmN1bGFyUHJvZ3Jlc3NJbmRpY2F0b3IoKSksCiAgICAgICAgZXJyb3I6IChlLCBfKSA9PiBfRXJyb3JWaWV3KAogICAgICAgICAgbWVzc2FnZTogZS50b1N0cmluZygpLAogICAgICAgICAgb25SZXRyeTogKCkgPT4gcmVmLmludmFsaWRhdGUocHJvZHVjdExpc3RQcm92aWRlciksCiAgICAgICAgKSwKICAgICAgKSwKICAgICAgLy8gRklYIDE6IFVzZSBWYWx1ZUxpc3RlbmFibGVCdWlsZGVyIGZvciBGQUIsIGF2b2lkcyBmdWxsIHJlYnVpbGQgb24gc2Nyb2xsCiAgICAgIGZsb2F0aW5nQWN0aW9uQnV0dG9uOiBWYWx1ZUxpc3RlbmFibGVCdWlsZGVyPGJvb2w+KAogICAgICAgIHZhbHVlTGlzdGVuYWJsZTogX3Nob3dTY3JvbGxUb1RvcCwKICAgICAgICBidWlsZGVyOiAoY29udGV4dCwgc2hvdywgXykgewogICAgICAgICAgcmV0dXJuIEFuaW1hdGVkT3BhY2l0eSgKICAgICAgICAgICAgb3BhY2l0eTogc2hvdyA/IDEuMCA6IDAuMCwKICAgICAgICAgICAgZHVyYXRpb246IGNvbnN0IER1cmF0aW9uKG1pbGxpc2Vjb25kczogMjAwKSwKICAgICAgICAgICAgY2hpbGQ6IEZsb2F0aW5nQWN0aW9uQnV0dG9uKAogICAgICAgICAgICAgIG9uUHJlc3NlZDogc2hvdwogICAgICAgICAgICAgICAgICA/ICgpIHsKICAgICAgICAgICAgICAgICAgICAgIF9zY3JvbGxDb250cm9sbGVyLmFuaW1hdGVUbygKICAgICAgICAgICAgICAgICAgICAgICAgMCwKICAgICAgICAgICAgICAgICAgICAgICAgZHVyYXRpb246IGNvbnN0IER1cmF0aW9uKG1pbGxpc2Vjb25kczogMzAwKSwKICAgICAgICAgICAgICAgICAgICAgICAgY3VydmU6IEN1cnZlcy5lYXNlSW5PdXQsCiAgICAgICAgICAgICAgICAgICAgICApOwogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgOiBudWxsLAogICAgICAgICAgICAgIGNoaWxkOiBjb25zdCBJY29uKEljb25zLmFycm93X3Vwd2FyZCksCiAgICAgICAgICAgICksCiAgICAgICAgICApOwogICAgICAgIH0sCiAgICAgICksCiAgICApOwogIH0KCiAgLy8gRklYIDU6IEV4dHJhY3QgbmF2aWdhdGlvbiBsb2dpYyB0byBhdm9pZCBjbG9zdXJlcyBpbiBidWlsZAogIHZvaWQgX25hdmlnYXRlVG9EZXRhaWwoQnVpbGRDb250ZXh0IGNvbnRleHQsIFN0cmluZyBwcm9kdWN0SWQpIHsKICAgIE5hdmlnYXRvci5vZihjb250ZXh0KS5wdXNoKAogICAgICBNYXRlcmlhbFBhZ2VSb3V0ZSgKICAgICAgICBidWlsZGVyOiAoXykgPT4gUHJvZHVjdERldGFpbFBhZ2UocHJvZHVjdElkOiBwcm9kdWN0SWQpLAogICAgICApLAogICAgKTsKICB9CgogIC8vIEZJWCA1OiBFeHRyYWN0IGNhcnQgbG9naWMgdG8gYXZvaWQgY2xvc3VyZXMgaW4gYnVpbGQKICB2b2lkIF9hZGRUb0NhcnQoQnVpbGRDb250ZXh0IGNvbnRleHQsIFByb2R1Y3RNb2RlbCBwcm9kdWN0KSB7CiAgICBTY2FmZm9sZE1lc3Nlbmdlci5vZihjb250ZXh0KS5zaG93U25hY2tCYXIoCiAgICAgIFNuYWNrQmFyKGNvbnRlbnQ6IFRleHQoJ0FkZGVkICR7cHJvZHVjdC5uYW1lfSB0byBjYXJ0JykpLAogICAgKTsKICB9Cn0KCi8vIEZJWCA0OiBFeHRyYWN0IGl0ZW0gYXMgYSBzZXBhcmF0ZSBTdGF0ZWxlc3NXaWRnZXQgZm9yIGJldHRlciByZWJ1aWxkIGNvbnRyb2wKLy8gRmx1dHRlciBjYW4gc2tpcCByZWJ1aWxkaW5nIHRoaXMgd2lkZ2V0IGlmIHRoZSBwcm9kdWN0IGRhdGEgaGFzbid0IGNoYW5nZWQKY2xhc3MgUHJvZHVjdExpc3RJdGVtIGV4dGVuZHMgU3RhdGVsZXNzV2lkZ2V0IHsKICBmaW5hbCBQcm9kdWN0TW9kZWwgcHJvZHVjdDsKICBmaW5hbCBWb2lkQ2FsbGJhY2sgb25UYXA7CiAgZmluYWwgVm9pZENhbGxiYWNrIG9uQWRkVG9DYXJ0OwoKICBjb25zdCBQcm9kdWN0TGlzdEl0ZW0oewogICAgc3VwZXIua2V5LAogICAgcmVxdWlyZWQgdGhpcy5wcm9kdWN0LAogICAgcmVxdWlyZWQgdGhpcy5vblRhcCwKICAgIHJlcXVpcmVkIHRoaXMub25BZGRUb0NhcnQsCiAgfSk7CgogIEBvdmVycmlkZQogIFdpZGdldCBidWlsZChCdWlsZENvbnRleHQgY29udGV4dCkgewogICAgLy8gRklYIDY6IFdyYXAgaW4gUmVwYWludEJvdW5kYXJ5IHNvIHRoaXMgaXRlbSBkb2Vzbid0IHRyaWdnZXIgcmVwYWludCBvZiBvdGhlcnMKICAgIHJldHVybiBSZXBhaW50Qm91bmRhcnkoCiAgICAgIGNoaWxkOiBHZXN0dXJlRGV0ZWN0b3IoCiAgICAgICAgb25UYXA6IG9uVGFwLAogICAgICAgIGNoaWxkOiBDb250YWluZXIoCiAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLmFsbCgxMiksCiAgICAgICAgICBkZWNvcmF0aW9uOiBCb3hEZWNvcmF0aW9uKAogICAgICAgICAgICBjb2xvcjogVGhlbWUub2YoY29udGV4dCkuY29sb3JTY2hlbWUuc3VyZmFjZSwKICAgICAgICAgICAgYm9yZGVyUmFkaXVzOiBCb3JkZXJSYWRpdXMuY2lyY3VsYXIoMTIpLAogICAgICAgICAgICBib3JkZXI6IEJvcmRlci5hbGwoCiAgICAgICAgICAgICAgY29sb3I6IFRoZW1lLm9mKGNvbnRleHQpLmNvbG9yU2NoZW1lLm91dGxpbmVWYXJpYW50LAogICAgICAgICAgICApLAogICAgICAgICAgKSwKICAgICAgICAgIGNoaWxkOiBDb2x1bW4oCiAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0YXJ0LAogICAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICAgIC8vIEZJWCA3OiBVc2UgY2FjaGVkX25ldHdvcmtfaW1hZ2Ugb3IgYXQgbGVhc3QgcHJvcGVyIGVycm9yIGhhbmRsaW5nCiAgICAgICAgICAgICAgX1Byb2R1Y3RJbWFnZShpbWFnZVVybDogcHJvZHVjdC5pbWFnZVVybCksCiAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiA4KSwKICAgICAgICAgICAgICBSb3coCiAgICAgICAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICAgICAgICBFeHBhbmRlZCgKICAgICAgICAgICAgICAgICAgICBjaGlsZDogVGV4dCgKICAgICAgICAgICAgICAgICAgICAgIHByb2R1Y3QubmFtZSwKICAgICAgICAgICAgICAgICAgICAgIHN0eWxlOiBUaGVtZS5vZihjb250ZXh0KS50ZXh0VGhlbWUudGl0bGVNZWRpdW0sCiAgICAgICAgICAgICAgICAgICAgICBtYXhMaW5lczogMiwKICAgICAgICAgICAgICAgICAgICAgIG92ZXJmbG93OiBUZXh0T3ZlcmZsb3cuZWxsaXBzaXMsCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgX1N0b2NrQmFkZ2UoaXNJblN0b2NrOiBwcm9kdWN0LmlzSW5TdG9jayksCiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgaWYgKHByb2R1Y3QuZGVzY3JpcHRpb24gIT0gbnVsbCkgLi4uWwogICAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiA0KSwKICAgICAgICAgICAgICAgIFRleHQoCiAgICAgICAgICAgICAgICAgIHByb2R1Y3QuZGVzY3JpcHRpb24hLAogICAgICAgICAgICAgICAgICBzdHlsZTogVGhlbWUub2YoY29udGV4dCkudGV4dFRoZW1lLmJvZHlTbWFsbCwKICAgICAgICAgICAgICAgICAgbWF4TGluZXM6IDIsCiAgICAgICAgICAgICAgICAgIG92ZXJmbG93OiBUZXh0T3ZlcmZsb3cuZWxsaXBzaXMsCiAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiA4KSwKICAgICAgICAgICAgICBSb3coCiAgICAgICAgICAgICAgICBtYWluQXhpc0FsaWdubWVudDogTWFpbkF4aXNBbGlnbm1lbnQuc3BhY2VCZXR3ZWVuLAogICAgICAgICAgICAgICAgY2hpbGRyZW46IFsKICAgICAgICAgICAgICAgICAgVGV4dCgKICAgICAgICAgICAgICAgICAgICAnXCQke3Byb2R1Y3QucHJpY2UudG9TdHJpbmdBc0ZpeGVkKDIpfScsCiAgICAgICAgICAgICAgICAgICAgc3R5bGU6IFRoZW1lLm9mKGNvbnRleHQpLnRleHRUaGVtZS50aXRsZUxhcmdlPy5jb3B5V2l0aCgKICAgICAgICAgICAgICAgICAgICAgICAgICBmb250V2VpZ2h0OiBGb250V2VpZ2h0LmJvbGQsCiAgICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIEljb25CdXR0b24oCiAgICAgICAgICAgICAgICAgICAgb25QcmVzc2VkOiBvbkFkZFRvQ2FydCwKICAgICAgICAgICAgICAgICAgICBpY29uOiBjb25zdCBJY29uKEljb25zLmFkZF9zaG9wcGluZ19jYXJ0KSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgXSwKICAgICAgICAgICksCiAgICAgICAgKSwKICAgICAgKSwKICAgICk7CiAgfQp9CgovLyBGSVggNzogU2VwYXJhdGUgaW1hZ2Ugd2lkZ2V0IHdpdGggcHJvcGVyIHBsYWNlaG9sZGVyLCBlcnJvciwgYW5kIGZhZGUtaW4KY2xhc3MgX1Byb2R1Y3RJbWFnZSBleHRlbmRzIFN0YXRlbGVzc1dpZGdldCB7CiAgZmluYWwgU3RyaW5nPyBpbWFnZVVybDsKCiAgY29uc3QgX1Byb2R1Y3RJbWFnZSh7dGhpcy5pbWFnZVVybH0pOwoKICBAb3ZlcnJpZGUKICBXaWRnZXQgYnVpbGQoQnVpbGRDb250ZXh0IGNvbnRleHQpIHsKICAgIC8vIEZJWCA3OiBIYW5kbGUgbnVsbC9lbXB0eSBpbWFnZVVybCBncmFjZWZ1bGx5CiAgICBpZiAoaW1hZ2VVcmwgPT0gbnVsbCB8fCBpbWFnZVVybCEuaXNFbXB0eSkgewogICAgICByZXR1cm4gQ29udGFpbmVyKAogICAgICAgIGhlaWdodDogMTgwLAogICAgICAgIGRlY29yYXRpb246IEJveERlY29yYXRpb24oCiAgICAgICAgICBjb2xvcjogQ29sb3JzLmdyZXlbMjAwXSwKICAgICAgICAgIGJvcmRlclJhZGl1czogQm9yZGVyUmFkaXVzLmNpcmN1bGFyKDgpLAogICAgICAgICksCiAgICAgICAgY2hpbGQ6IGNvbnN0IEljb24oSWNvbnMuaW1hZ2Vfbm90X3N1cHBvcnRlZCwgc2l6ZTogNDgpLAogICAgICApOwogICAgfQoKICAgIHJldHVybiBDbGlwUlJlY3QoCiAgICAgIGJvcmRlclJhZGl1czogQm9yZGVyUmFkaXVzLmNpcmN1bGFyKDgpLAogICAgICBjaGlsZDogSW1hZ2UubmV0d29yaygKICAgICAgICBpbWFnZVVybCEsCiAgICAgICAgaGVpZ2h0OiAxODAsCiAgICAgICAgd2lkdGg6IGRvdWJsZS5pbmZpbml0eSwKICAgICAgICBmaXQ6IEJveEZpdC5jb3ZlciwKICAgICAgICAvLyBGSVggNzogQWRkIGZhZGUtaW4gYW5pbWF0aW9uIGZvciBzbW9vdGhlciBVWAogICAgICAgIGZyYW1lQnVpbGRlcjogKGNvbnRleHQsIGNoaWxkLCBmcmFtZSwgd2FzU3luY2hyb25vdXNseUxvYWRlZCkgewogICAgICAgICAgaWYgKHdhc1N5bmNocm9ub3VzbHlMb2FkZWQpIHJldHVybiBjaGlsZDsKICAgICAgICAgIHJldHVybiBBbmltYXRlZE9wYWNpdHkoCiAgICAgICAgICAgIG9wYWNpdHk6IGZyYW1lID09IG51bGwgPyAwLjAgOiAxLjAsCiAgICAgICAgICAgIGR1cmF0aW9uOiBjb25zdCBEdXJhdGlvbihtaWxsaXNlY29uZHM6IDMwMCksCiAgICAgICAgICAgIGNoaWxkOiBjaGlsZCwKICAgICAgICAgICk7CiAgICAgICAgfSwKICAgICAgICAvLyBGSVggNzogUHJvcGVyIGVycm9yIHdpZGdldCBpbnN0ZWFkIG9mIGJyb2tlbiBpbWFnZQogICAgICAgIGVycm9yQnVpbGRlcjogKGNvbnRleHQsIGVycm9yLCBzdGFja1RyYWNlKSB7CiAgICAgICAgICByZXR1cm4gQ29udGFpbmVyKAogICAgICAgICAgICBoZWlnaHQ6IDE4MCwKICAgICAgICAgICAgZGVjb3JhdGlvbjogQm94RGVjb3JhdGlvbigKICAgICAgICAgICAgICBjb2xvcjogQ29sb3JzLmdyZXlbMjAwXSwKICAgICAgICAgICAgICBib3JkZXJSYWRpdXM6IEJvcmRlclJhZGl1cy5jaXJjdWxhcig4KSwKICAgICAgICAgICAgKSwKICAgICAgICAgICAgY2hpbGQ6IGNvbnN0IEljb24oSWNvbnMuYnJva2VuX2ltYWdlLCBzaXplOiA0OCksCiAgICAgICAgICApOwogICAgICAgIH0sCiAgICAgICAgbG9hZGluZ0J1aWxkZXI6IChjb250ZXh0LCBjaGlsZCwgbG9hZGluZ1Byb2dyZXNzKSB7CiAgICAgICAgICBpZiAobG9hZGluZ1Byb2dyZXNzID09IG51bGwpIHJldHVybiBjaGlsZDsKICAgICAgICAgIHJldHVybiBDb250YWluZXIoCiAgICAgICAgICAgIGhlaWdodDogMTgwLAogICAgICAgICAgICBjb2xvcjogQ29sb3JzLmdyZXlbMjAwXSwKICAgICAgICAgICAgY2hpbGQ6IENlbnRlcigKICAgICAgICAgICAgICBjaGlsZDogQ2lyY3VsYXJQcm9ncmVzc0luZGljYXRvcigKICAgICAgICAgICAgICAgIHZhbHVlOiBsb2FkaW5nUHJvZ3Jlc3MuZXhwZWN0ZWRUb3RhbEJ5dGVzICE9IG51bGwKICAgICAgICAgICAgICAgICAgICA/IGxvYWRpbmdQcm9ncmVzcy5jdW11bGF0aXZlQnl0ZXNMb2FkZWQgLwogICAgICAgICAgICAgICAgICAgICAgICBsb2FkaW5nUHJvZ3Jlc3MuZXhwZWN0ZWRUb3RhbEJ5dGVzIQogICAgICAgICAgICAgICAgICAgIDogbnVsbCwKICAgICAgICAgICAgICApLAogICAgICAgICAgICApLAogICAgICAgICAgKTsKICAgICAgICB9LAogICAgICApLAogICAgKTsKICB9Cn0KCi8vIEZJWCA4OiBFeHRyYWN0IHN0b2NrIGJhZGdlIGFzIGNvbnN0LW9wdGltaXphYmxlIHdpZGdldApjbGFzcyBfU3RvY2tCYWRnZSBleHRlbmRzIFN0YXRlbGVzc1dpZGdldCB7CiAgZmluYWwgYm9vbCBpc0luU3RvY2s7CgogIGNvbnN0IF9TdG9ja0JhZGdlKHtyZXF1aXJlZCB0aGlzLmlzSW5TdG9ja30pOwoKICBAb3ZlcnJpZGUKICBXaWRnZXQgYnVpbGQoQnVpbGRDb250ZXh0IGNvbnRleHQpIHsKICAgIHJldHVybiBDb250YWluZXIoCiAgICAgIHBhZGRpbmc6IGNvbnN0IEVkZ2VJbnNldHMuc3ltbWV0cmljKGhvcml6b250YWw6IDgsIHZlcnRpY2FsOiA0KSwKICAgICAgZGVjb3JhdGlvbjogQm94RGVjb3JhdGlvbigKICAgICAgICBjb2xvcjogaXNJblN0b2NrCiAgICAgICAgICAgID8gQ29sb3JzLmdyZWVuLndpdGhWYWx1ZXMoYWxwaGE6IDAuMSkKICAgICAgICAgICAgOiBDb2xvcnMucmVkLndpdGhWYWx1ZXMoYWxwaGE6IDAuMSksCiAgICAgICAgYm9yZGVyUmFkaXVzOiBCb3JkZXJSYWRpdXMuY2lyY3VsYXIoNCksCiAgICAgICksCiAgICAgIGNoaWxkOiBUZXh0KAogICAgICAgIGlzSW5TdG9jayA/ICdJbiBTdG9jaycgOiAnT3V0IG9mIFN0b2NrJywKICAgICAgICBzdHlsZTogVGV4dFN0eWxlKAogICAgICAgICAgZm9udFNpemU6IDEyLAogICAgICAgICAgY29sb3I6IGlzSW5TdG9jayA/IENvbG9ycy5ncmVlbiA6IENvbG9ycy5yZWQsCiAgICAgICAgKSwKICAgICAgKSwKICAgICk7CiAgfQp9CgovLyBGSVggOTogRXh0cmFjdCBlcnJvciB2aWV3IGFzIHJldXNhYmxlIHdpZGdldApjbGFzcyBfRXJyb3JWaWV3IGV4dGVuZHMgU3RhdGVsZXNzV2lkZ2V0IHsKICBmaW5hbCBTdHJpbmcgbWVzc2FnZTsKICBmaW5hbCBWb2lkQ2FsbGJhY2sgb25SZXRyeTsKCiAgY29uc3QgX0Vycm9yVmlldyh7cmVxdWlyZWQgdGhpcy5tZXNzYWdlLCByZXF1aXJlZCB0aGlzLm9uUmV0cnl9KTsKCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0KSB7CiAgICByZXR1cm4gQ2VudGVyKAogICAgICBjaGlsZDogUGFkZGluZygKICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLmFsbCgzMiksCiAgICAgICAgY2hpbGQ6IENvbHVtbigKICAgICAgICAgIG1haW5BeGlzQWxpZ25tZW50OiBNYWluQXhpc0FsaWdubWVudC5jZW50ZXIsCiAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICBJY29uKEljb25zLmVycm9yX291dGxpbmUsIHNpemU6IDQ4LAogICAgICAgICAgICAgICAgY29sb3I6IFRoZW1lLm9mKGNvbnRleHQpLmNvbG9yU2NoZW1lLmVycm9yKSwKICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCiAgICAgICAgICAgIFRleHQobWVzc2FnZSwgdGV4dEFsaWduOiBUZXh0QWxpZ24uY2VudGVyKSwKICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCiAgICAgICAgICAgIEZpbGxlZEJ1dHRvbi50b25hbChvblByZXNzZWQ6IG9uUmV0cnksIGNoaWxkOiBjb25zdCBUZXh0KCdSZXRyeScpKSwKICAgICAgICAgIF0sCiAgICAgICAgKSwKICAgICAgKSwKICAgICk7CiAgfQp9CgovLyBQbGFjZWhvbGRlciAtIGluIHJlYWwgYXBwIHRoaXMgd291bGQgYmUgYSBzZXBhcmF0ZSBmaWxlCmNsYXNzIFByb2R1Y3REZXRhaWxQYWdlIGV4dGVuZHMgU3RhdGVsZXNzV2lkZ2V0IHsKICBmaW5hbCBTdHJpbmcgcHJvZHVjdElkOwogIGNvbnN0IFByb2R1Y3REZXRhaWxQYWdlKHtzdXBlci5rZXksIHJlcXVpcmVkIHRoaXMucHJvZHVjdElkfSk7CgogIEBvdmVycmlkZQogIFdpZGdldCBidWlsZChCdWlsZENvbnRleHQgY29udGV4dCkgewogICAgcmV0dXJuIFNjYWZmb2xkKAogICAgICBhcHBCYXI6IEFwcEJhcih0aXRsZTogY29uc3QgVGV4dCgnUHJvZHVjdCBEZXRhaWwnKSksCiAgICAgIGJvZHk6IENlbnRlcihjaGlsZDogVGV4dCgnUHJvZHVjdDogJHByb2R1Y3RJZCcpKSwKICAgICk7CiAgfQp9Cg=="}, {"name": "before_product_list_screen.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,Ly8gZmVhdHVyZXMvcHJvZHVjdC9wcmVzZW50YXRpb24vcHJvZHVjdF9saXN0X3NjcmVlbi5kYXJ0Ci8vIEJFRk9SRTogUGVyZm9ybWFuY2Utb3B0aW1pemVkIHZlcnNpb24gKGhhcyBtdWx0aXBsZSBpc3N1ZXMpCmltcG9ydCAncGFja2FnZTpmbHV0dGVyL21hdGVyaWFsLmRhcnQnOwppbXBvcnQgJ3BhY2thZ2U6Zmx1dHRlcl9yaXZlcnBvZC9mbHV0dGVyX3JpdmVycG9kLmRhcnQnOwoKaW1wb3J0ICcuLi8uLi9kYXRhL3Byb2R1Y3RfbW9kZWwuZGFydCc7CmltcG9ydCAnLi4vLi4vZG9tYWluL3Byb2R1Y3RfcHJvdmlkZXIuZGFydCc7CmltcG9ydCAnd2lkZ2V0cy9wcm9kdWN0X2NhcmQuZGFydCc7CgpjbGFzcyBQcm9kdWN0TGlzdFNjcmVlbiBleHRlbmRzIENvbnN1bWVyU3RhdGVmdWxXaWRnZXQgewogIGNvbnN0IFByb2R1Y3RMaXN0U2NyZWVuKHtzdXBlci5rZXl9KTsKCiAgQG92ZXJyaWRlCiAgQ29uc3VtZXJTdGF0ZTxQcm9kdWN0TGlzdFNjcmVlbj4gY3JlYXRlU3RhdGUoKSA9PiBfUHJvZHVjdExpc3RTY3JlZW5TdGF0ZSgpOwp9CgpjbGFzcyBfUHJvZHVjdExpc3RTY3JlZW5TdGF0ZSBleHRlbmRzIENvbnN1bWVyU3RhdGU8UHJvZHVjdExpc3RTY3JlZW4+IHsKICBmaW5hbCBTY3JvbGxDb250cm9sbGVyIF9zY3JvbGxDb250cm9sbGVyID0gU2Nyb2xsQ29udHJvbGxlcigpOwogIFN0cmluZyBfc2VhcmNoUXVlcnkgPSAnJzsKCiAgQG92ZXJyaWRlCiAgdm9pZCBpbml0U3RhdGUoKSB7CiAgICBzdXBlci5pbml0U3RhdGUoKTsKICAgIF9zY3JvbGxDb250cm9sbGVyLmFkZExpc3RlbmVyKF9vblNjcm9sbCk7CiAgfQoKICBAb3ZlcnJpZGUKICB2b2lkIGRpc3Bvc2UoKSB7CiAgICBfc2Nyb2xsQ29udHJvbGxlci5kaXNwb3NlKCk7CiAgICBzdXBlci5kaXNwb3NlKCk7CiAgfQoKICB2b2lkIF9vblNjcm9sbCgpIHsKICAgIC8vIElTU1VFOiBzZXRTdGF0ZSBjYWxsZWQgb24gZXZlcnkgc2Nyb2xsIHBpeGVsLCB0cmlnZ2VyaW5nIGZ1bGwgcmVidWlsZAogICAgc2V0U3RhdGUoKCkge30pOwogIH0KCiAgTGlzdDxQcm9kdWN0TW9kZWw+IF9maWx0ZXJQcm9kdWN0cyhMaXN0PFByb2R1Y3RNb2RlbD4gcHJvZHVjdHMpIHsKICAgIGlmIChfc2VhcmNoUXVlcnkuaXNFbXB0eSkgcmV0dXJuIHByb2R1Y3RzOwogICAgcmV0dXJuIHByb2R1Y3RzCiAgICAgICAgLndoZXJlKChwKSA9PgogICAgICAgICAgICBwLm5hbWUudG9Mb3dlckNhc2UoKS5jb250YWlucyhfc2VhcmNoUXVlcnkudG9Mb3dlckNhc2UoKSkpCiAgICAgICAgLnRvTGlzdCgpOwogIH0KCiAgQG92ZXJyaWRlCiAgV2lkZ2V0IGJ1aWxkKEJ1aWxkQ29udGV4dCBjb250ZXh0KSB7CiAgICBmaW5hbCBwcm9kdWN0c0FzeW5jID0gcmVmLndhdGNoKHByb2R1Y3RMaXN0UHJvdmlkZXIpOwoKICAgIHJldHVybiBTY2FmZm9sZCgKICAgICAgYXBwQmFyOiBBcHBCYXIoCiAgICAgICAgdGl0bGU6IGNvbnN0IFRleHQoJ1Byb2R1Y3RzJyksCiAgICAgICAgLy8gSVNTVUU6IFNlYXJjaCBpbiBBcHBCYXIgdHJpZ2dlcnMgZnVsbCBib2R5IHJlYnVpbGQgb24gZXZlcnkga2V5c3Ryb2tlCiAgICAgICAgYm90dG9tOiBQcmVmZXJyZWRTaXplKAogICAgICAgICAgcHJlZmVycmVkU2l6ZTogY29uc3QgU2l6ZS5mcm9tSGVpZ2h0KDYwKSwKICAgICAgICAgIGNoaWxkOiBQYWRkaW5nKAogICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLmZyb21MVFJCKDE2LCAwLCAxNiwgMTIpLAogICAgICAgICAgICBjaGlsZDogVGV4dEZpZWxkKAogICAgICAgICAgICAgIGRlY29yYXRpb246IElucHV0RGVjb3JhdGlvbigKICAgICAgICAgICAgICAgIGhpbnRUZXh0OiAnU2VhcmNoIHByb2R1Y3RzLi4uJywKICAgICAgICAgICAgICAgIHByZWZpeEljb246IGNvbnN0IEljb24oSWNvbnMuc2VhcmNoKSwKICAgICAgICAgICAgICAgIGJvcmRlcjogT3V0bGluZUlucHV0Qm9yZGVyKAogICAgICAgICAgICAgICAgICBib3JkZXJSYWRpdXM6IEJvcmRlclJhZGl1cy5jaXJjdWxhcig4KSwKICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICBmaWxsZWQ6IHRydWUsCiAgICAgICAgICAgICAgICBmaWxsQ29sb3I6IFRoZW1lLm9mKGNvbnRleHQpLmNvbG9yU2NoZW1lLnN1cmZhY2UsCiAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICBvbkNoYW5nZWQ6ICh2YWx1ZSkgewogICAgICAgICAgICAgICAgc2V0U3RhdGUoKCkgewogICAgICAgICAgICAgICAgICBfc2VhcmNoUXVlcnkgPSB2YWx1ZTsKICAgICAgICAgICAgICAgIH0pOwogICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICksCiAgICAgICAgICApLAogICAgICAgICksCiAgICAgICksCiAgICAgIGJvZHk6IHByb2R1Y3RzQXN5bmMud2hlbigKICAgICAgICBkYXRhOiAocHJvZHVjdHMpIHsKICAgICAgICAgIGZpbmFsIGZpbHRlcmVkID0gX2ZpbHRlclByb2R1Y3RzKHByb2R1Y3RzKTsKCiAgICAgICAgICBpZiAoZmlsdGVyZWQuaXNFbXB0eSkgewogICAgICAgICAgICByZXR1cm4gY29uc3QgQ2VudGVyKAogICAgICAgICAgICAgIGNoaWxkOiBDb2x1bW4oCiAgICAgICAgICAgICAgICBtYWluQXhpc0FsaWdubWVudDogTWFpbkF4aXNBbGlnbm1lbnQuY2VudGVyLAogICAgICAgICAgICAgICAgY2hpbGRyZW46IFsKICAgICAgICAgICAgICAgICAgSWNvbihJY29ucy5zaG9wcGluZ19iYWdfb3V0bGluZWQsIHNpemU6IDY0KSwKICAgICAgICAgICAgICAgICAgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCiAgICAgICAgICAgICAgICAgIFRleHQoJ05vIHByb2R1Y3RzIGZvdW5kJyksCiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICksCiAgICAgICAgICAgICk7CiAgICAgICAgICB9CgogICAgICAgICAgcmV0dXJuIFJlZnJlc2hJbmRpY2F0b3IoCiAgICAgICAgICAgIG9uUmVmcmVzaDogKCkgPT4KICAgICAgICAgICAgICAgIHJlZi5yZWFkKHByb2R1Y3RMaXN0UHJvdmlkZXIubm90aWZpZXIpLnJlZnJlc2goKSwKICAgICAgICAgICAgLy8gQ1JJVElDQUwgSVNTVUU6IFVzaW5nIExpc3RWaWV3IGluc3RlYWQgb2YgTGlzdFZpZXcuYnVpbGRlcgogICAgICAgICAgICAvLyBUaGlzIHJlbmRlcnMgQUxMIGl0ZW1zIGF0IG9uY2UsIG5vdCBqdXN0IHZpc2libGUgb25lcwogICAgICAgICAgICBjaGlsZDogTGlzdFZpZXcoCiAgICAgICAgICAgICAgY29udHJvbGxlcjogX3Njcm9sbENvbnRyb2xsZXIsCiAgICAgICAgICAgICAgcGFkZGluZzogY29uc3QgRWRnZUluc2V0cy5hbGwoMTYpLAogICAgICAgICAgICAgIGNoaWxkcmVuOiBbCiAgICAgICAgICAgICAgICAvLyBJU1NVRTogRmlsdGVyaW5nIGNyZWF0ZXMgbmV3IGxpc3Qgb24gZXZlcnkgcmVidWlsZAogICAgICAgICAgICAgICAgLi4uZmlsdGVyZWQubWFwKAogICAgICAgICAgICAgICAgICAocHJvZHVjdCkgPT4gUGFkZGluZygKICAgICAgICAgICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLm9ubHkoYm90dG9tOiAxMiksCiAgICAgICAgICAgICAgICAgICAgY2hpbGQ6IF9idWlsZFByb2R1Y3RJdGVtKGNvbnRleHQsIHByb2R1Y3QpLAogICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICBdLAogICAgICAgICAgICApLAogICAgICAgICAgKTsKICAgICAgICB9LAogICAgICAgIGxvYWRpbmc6ICgpID0+IGNvbnN0IENlbnRlcihjaGlsZDogQ2lyY3VsYXJQcm9ncmVzc0luZGljYXRvcigpKSwKICAgICAgICBlcnJvcjogKGUsIF8pID0+IENlbnRlcigKICAgICAgICAgIGNoaWxkOiBDb2x1bW4oCiAgICAgICAgICAgIG1haW5BeGlzQWxpZ25tZW50OiBNYWluQXhpc0FsaWdubWVudC5jZW50ZXIsCiAgICAgICAgICAgIGNoaWxkcmVuOiBbCiAgICAgICAgICAgICAgY29uc3QgSWNvbihJY29ucy5lcnJvcl9vdXRsaW5lLCBzaXplOiA0OCksCiAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCiAgICAgICAgICAgICAgVGV4dChlLnRvU3RyaW5nKCksIHRleHRBbGlnbjogVGV4dEFsaWduLmNlbnRlciksCiAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxNiksCiAgICAgICAgICAgICAgRmlsbGVkQnV0dG9uLnRvbmFsKAogICAgICAgICAgICAgICAgb25QcmVzc2VkOiAoKSA9PiByZWYuaW52YWxpZGF0ZShwcm9kdWN0TGlzdFByb3ZpZGVyKSwKICAgICAgICAgICAgICAgIGNoaWxkOiBjb25zdCBUZXh0KCdSZXRyeScpLAogICAgICAgICAgICAgICksCiAgICAgICAgICAgIF0sCiAgICAgICAgICApLAogICAgICAgICksCiAgICAgICksCiAgICAgIC8vIElTU1VFOiBGQUIgdmlzaWJpbGl0eSBjaGVjayB1c2VzIHNldFN0YXRlIG9uIHNjcm9sbCAtIGNhdXNlcyBmdWxsIHJlYnVpbGQKICAgICAgZmxvYXRpbmdBY3Rpb25CdXR0b246IF9zY3JvbGxDb250cm9sbGVyLmhhc0NsaWVudHMgJiYKICAgICAgICAgICAgICBfc2Nyb2xsQ29udHJvbGxlci5vZmZzZXQgPiAyMDAKICAgICAgICAgID8gRmxvYXRpbmdBY3Rpb25CdXR0b24oCiAgICAgICAgICAgICAgb25QcmVzc2VkOiAoKSB7CiAgICAgICAgICAgICAgICBfc2Nyb2xsQ29udHJvbGxlci5hbmltYXRlVG8oCiAgICAgICAgICAgICAgICAgIDAsCiAgICAgICAgICAgICAgICAgIGR1cmF0aW9uOiBjb25zdCBEdXJhdGlvbihtaWxsaXNlY29uZHM6IDMwMCksCiAgICAgICAgICAgICAgICAgIGN1cnZlOiBDdXJ2ZXMuZWFzZUluT3V0LAogICAgICAgICAgICAgICAgKTsKICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgIGNoaWxkOiBjb25zdCBJY29uKEljb25zLmFycm93X3Vwd2FyZCksCiAgICAgICAgICAgICkKICAgICAgICAgIDogbnVsbCwKICAgICk7CiAgfQoKICAvLyBJU1NVRTogSGVhdnkgaXRlbSB3aWRnZXQgYnVpbHQgYXMgaW5saW5lIG1ldGhvZCAtIG5vIGNvbnN0IG9wdGltaXphdGlvbiBwb3NzaWJsZQogIC8vIElTU1VFOiBObyBSZXBhaW50Qm91bmRhcnksIHNvIG9uZSBpdGVtIGNoYW5naW5nIHJlcGFpbnRzIHRoZSBlbnRpcmUgbGlzdAogIFdpZGdldCBfYnVpbGRQcm9kdWN0SXRlbShCdWlsZENvbnRleHQgY29udGV4dCwgUHJvZHVjdE1vZGVsIHByb2R1Y3QpIHsKICAgIHJldHVybiBHZXN0dXJlRGV0ZWN0b3IoCiAgICAgIG9uVGFwOiAoKSB7CiAgICAgICAgTmF2aWdhdG9yLm9mKGNvbnRleHQpLnB1c2goCiAgICAgICAgICBNYXRlcmlhbFBhZ2VSb3V0ZSgKICAgICAgICAgICAgYnVpbGRlcjogKF8pID0+IFByb2R1Y3REZXRhaWxQYWdlKHByb2R1Y3RJZDogcHJvZHVjdC5pZCksCiAgICAgICAgICApLAogICAgICAgICk7CiAgICAgIH0sCiAgICAgIGNoaWxkOiBDb250YWluZXIoCiAgICAgICAgcGFkZGluZzogY29uc3QgRWRnZUluc2V0cy5hbGwoMTIpLAogICAgICAgIGRlY29yYXRpb246IEJveERlY29yYXRpb24oCiAgICAgICAgICBjb2xvcjogVGhlbWUub2YoY29udGV4dCkuY29sb3JTY2hlbWUuc3VyZmFjZSwKICAgICAgICAgIGJvcmRlclJhZGl1czogQm9yZGVyUmFkaXVzLmNpcmN1bGFyKDEyKSwKICAgICAgICAgIGJvcmRlcjogQm9yZGVyLmFsbCgKICAgICAgICAgICAgY29sb3I6IFRoZW1lLm9mKGNvbnRleHQpLmNvbG9yU2NoZW1lLm91dGxpbmVWYXJpYW50LAogICAgICAgICAgKSwKICAgICAgICApLAogICAgICAgIGNoaWxkOiBDb2x1bW4oCiAgICAgICAgICBjcm9zc0F4aXNBbGlnbm1lbnQ6IENyb3NzQXhpc0FsaWdubWVudC5zdGFydCwKICAgICAgICAgIGNoaWxkcmVuOiBbCiAgICAgICAgICAgIC8vIElTU1VFOiBJbWFnZSBsb2FkZWQgd2l0aG91dCBjYWNoaW5nIGFuZCB3aXRob3V0IGVycm9yIGhhbmRsaW5nCiAgICAgICAgICAgIC8vIEVhY2ggaW1hZ2UgaXMgbG9hZGVkIGZyZXNoLCBubyBjYWNoZWQgbmV0d29yayBpbWFnZQogICAgICAgICAgICBDbGlwUlJlY3QoCiAgICAgICAgICAgICAgYm9yZGVyUmFkaXVzOiBCb3JkZXJSYWRpdXMuY2lyY3VsYXIoOCksCiAgICAgICAgICAgICAgY2hpbGQ6IEltYWdlLm5ldHdvcmsoCiAgICAgICAgICAgICAgICBwcm9kdWN0LmltYWdlVXJsID8/ICcnLAogICAgICAgICAgICAgICAgaGVpZ2h0OiAxODAsCiAgICAgICAgICAgICAgICB3aWR0aDogZG91YmxlLmluZmluaXR5LAogICAgICAgICAgICAgICAgZml0OiBCb3hGaXQuY292ZXIsCiAgICAgICAgICAgICAgICAvLyBJU1NVRTogTm8gZXJyb3Igd2lkZ2V0LCBubyBwbGFjZWhvbGRlciwgbm8gZmFkZS1pbgogICAgICAgICAgICAgICAgbG9hZGluZ0J1aWxkZXI6IChjb250ZXh0LCBjaGlsZCwgbG9hZGluZ1Byb2dyZXNzKSB7CiAgICAgICAgICAgICAgICAgIGlmIChsb2FkaW5nUHJvZ3Jlc3MgPT0gbnVsbCkgcmV0dXJuIGNoaWxkOwogICAgICAgICAgICAgICAgICByZXR1cm4gQ29udGFpbmVyKAogICAgICAgICAgICAgICAgICAgIGhlaWdodDogMTgwLAogICAgICAgICAgICAgICAgICAgIGNvbG9yOiBDb2xvcnMuZ3JleVsyMDBdLAogICAgICAgICAgICAgICAgICAgIGNoaWxkOiBjb25zdCBDZW50ZXIoCiAgICAgICAgICAgICAgICAgICAgICBjaGlsZDogQ2lyY3VsYXJQcm9ncmVzc0luZGljYXRvcigpLAogICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICk7CiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICksCiAgICAgICAgICAgICksCiAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogOCksCiAgICAgICAgICAgIFJvdygKICAgICAgICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgICAgICAgRXhwYW5kZWQoCiAgICAgICAgICAgICAgICAgIGNoaWxkOiBUZXh0KAogICAgICAgICAgICAgICAgICAgIHByb2R1Y3QubmFtZSwKICAgICAgICAgICAgICAgICAgICBzdHlsZTogVGhlbWUub2YoY29udGV4dCkudGV4dFRoZW1lLnRpdGxlTWVkaXVtLAogICAgICAgICAgICAgICAgICAgIG1heExpbmVzOiAyLAogICAgICAgICAgICAgICAgICAgIG92ZXJmbG93OiBUZXh0T3ZlcmZsb3cuZWxsaXBzaXMsCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgLy8gSVNTVUU6IE5vIGNvbnN0LCByZWJ1aWx0IGV2ZXJ5IHRpbWUKICAgICAgICAgICAgICAgIENvbnRhaW5lcigKICAgICAgICAgICAgICAgICAgcGFkZGluZzogY29uc3QgRWRnZUluc2V0cy5zeW1tZXRyaWMoCiAgICAgICAgICAgICAgICAgICAgaG9yaXpvbnRhbDogOCwKICAgICAgICAgICAgICAgICAgICB2ZXJ0aWNhbDogNCwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgZGVjb3JhdGlvbjogQm94RGVjb3JhdGlvbigKICAgICAgICAgICAgICAgICAgICBjb2xvcjogcHJvZHVjdC5pc0luU3RvY2sKICAgICAgICAgICAgICAgICAgICAgICAgPyBDb2xvcnMuZ3JlZW4ud2l0aE9wYWNpdHkoMC4xKQogICAgICAgICAgICAgICAgICAgICAgICA6IENvbG9ycy5yZWQud2l0aE9wYWNpdHkoMC4xKSwKICAgICAgICAgICAgICAgICAgICBib3JkZXJSYWRpdXM6IEJvcmRlclJhZGl1cy5jaXJjdWxhcig0KSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgY2hpbGQ6IFRleHQoCiAgICAgICAgICAgICAgICAgICAgcHJvZHVjdC5pc0luU3RvY2sgPyAnSW4gU3RvY2snIDogJ091dCBvZiBTdG9jaycsCiAgICAgICAgICAgICAgICAgICAgc3R5bGU6IFRleHRTdHlsZSgKICAgICAgICAgICAgICAgICAgICAgIGZvbnRTaXplOiAxMiwKICAgICAgICAgICAgICAgICAgICAgIGNvbG9yOiBwcm9kdWN0LmlzSW5TdG9jayA/IENvbG9ycy5ncmVlbiA6IENvbG9ycy5yZWQsCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgXSwKICAgICAgICAgICAgKSwKICAgICAgICAgICAgaWYgKHByb2R1Y3QuZGVzY3JpcHRpb24gIT0gbnVsbCkgLi4uWwogICAgICAgICAgICAgIGNvbnN0IFNpemVkQm94KGhlaWdodDogNCksCiAgICAgICAgICAgICAgVGV4dCgKICAgICAgICAgICAgICAgIHByb2R1Y3QuZGVzY3JpcHRpb24hLAogICAgICAgICAgICAgICAgc3R5bGU6IFRoZW1lLm9mKGNvbnRleHQpLnRleHRUaGVtZS5ib2R5U21hbGwsCiAgICAgICAgICAgICAgICBtYXhMaW5lczogMiwKICAgICAgICAgICAgICAgIG92ZXJmbG93OiBUZXh0T3ZlcmZsb3cuZWxsaXBzaXMsCiAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgXSwKICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiA4KSwKICAgICAgICAgICAgUm93KAogICAgICAgICAgICAgIG1haW5BeGlzQWxpZ25tZW50OiBNYWluQXhpc0FsaWdubWVudC5zcGFjZUJldHdlZW4sCiAgICAgICAgICAgICAgY2hpbGRyZW46IFsKICAgICAgICAgICAgICAgIFRleHQoCiAgICAgICAgICAgICAgICAgICdcJCR7cHJvZHVjdC5wcmljZS50b1N0cmluZ0FzRml4ZWQoMil9JywKICAgICAgICAgICAgICAgICAgc3R5bGU6IFRoZW1lLm9mKGNvbnRleHQpLnRleHRUaGVtZS50aXRsZUxhcmdlPy5jb3B5V2l0aCgKICAgICAgICAgICAgICAgICAgICAgICAgZm9udFdlaWdodDogRm9udFdlaWdodC5ib2xkLAogICAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICBJY29uQnV0dG9uKAogICAgICAgICAgICAgICAgICBvblByZXNzZWQ6ICgpIHsKICAgICAgICAgICAgICAgICAgICAvLyBJU1NVRTogSW5saW5lIGFub255bW91cyBmdW5jdGlvbiBjcmVhdGVkIG9uIGV2ZXJ5IGJ1aWxkCiAgICAgICAgICAgICAgICAgICAgU2NhZmZvbGRNZXNzZW5nZXIub2YoY29udGV4dCkuc2hvd1NuYWNrQmFyKAogICAgICAgICAgICAgICAgICAgICAgU25hY2tCYXIoY29udGVudDogVGV4dCgnQWRkZWQgJHtwcm9kdWN0Lm5hbWV9IHRvIGNhcnQnKSksCiAgICAgICAgICAgICAgICAgICAgKTsKICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgaWNvbjogY29uc3QgSWNvbihJY29ucy5hZGRfc2hvcHBpbmdfY2FydCksCiAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICksCiAgICAgICAgICBdLAogICAgICAgICksCiAgICAgICksCiAgICApOwogIH0KfQoKLy8gUGxhY2Vob2xkZXIgLSBpbiByZWFsIGFwcCB0aGlzIHdvdWxkIGJlIGEgc2VwYXJhdGUgZmlsZQpjbGFzcyBQcm9kdWN0RGV0YWlsUGFnZSBleHRlbmRzIFN0YXRlbGVzc1dpZGdldCB7CiAgZmluYWwgU3RyaW5nIHByb2R1Y3RJZDsKICBjb25zdCBQcm9kdWN0RGV0YWlsUGFnZSh7c3VwZXIua2V5LCByZXF1aXJlZCB0aGlzLnByb2R1Y3RJZH0pOwoKICBAb3ZlcnJpZGUKICBXaWRnZXQgYnVpbGQoQnVpbGRDb250ZXh0IGNvbnRleHQpIHsKICAgIHJldHVybiBTY2FmZm9sZCgKICAgICAgYXBwQmFyOiBBcHBCYXIodGl0bGU6IGNvbnN0IFRleHQoJ1Byb2R1Y3QgRGV0YWlsJykpLAogICAgICBib2R5OiBDZW50ZXIoY2hpbGQ6IFRleHQoJ1Byb2R1Y3Q6ICRwcm9kdWN0SWQnKSksCiAgICApOwogIH0KfQo="}, {"name": "product_model.dart", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,Ly8gZmVhdHVyZXMvcHJvZHVjdC9kYXRhL3Byb2R1Y3RfbW9kZWwuZGFydAovLyBEYXRhIG1vZGVsIGZvciBwcm9kdWN0cyAodXNlZCBieSBib3RoIGJlZm9yZS9hZnRlciB2ZXJzaW9ucykKaW1wb3J0ICdwYWNrYWdlOmZyZWV6ZWRfYW5ub3RhdGlvbi9mcmVlemVkX2Fubm90YXRpb24uZGFydCc7CgpwYXJ0ICdwcm9kdWN0X21vZGVsLmZyZWV6ZWQuZGFydCc7CnBhcnQgJ3Byb2R1Y3RfbW9kZWwuZy5kYXJ0JzsKCkBmcmVlemVkCmNsYXNzIFByb2R1Y3RNb2RlbCB3aXRoIF8kUHJvZHVjdE1vZGVsIHsKICBjb25zdCBmYWN0b3J5IFByb2R1Y3RNb2RlbCh7CiAgICByZXF1aXJlZCBTdHJpbmcgaWQsCiAgICByZXF1aXJlZCBTdHJpbmcgbmFtZSwKICAgIHJlcXVpcmVkIGRvdWJsZSBwcmljZSwKICAgIFN0cmluZz8gZGVzY3JpcHRpb24sCiAgICBTdHJpbmc/IGltYWdlVXJsLAogICAgQERlZmF1bHQoZmFsc2UpIGJvb2wgaXNJblN0b2NrLAogICAgQEpzb25LZXkobmFtZTogJ2NyZWF0ZWRfYXQnKSBEYXRlVGltZT8gY3JlYXRlZEF0LAogIH0pID0gX1Byb2R1Y3RNb2RlbDsKCiAgZmFjdG9yeSBQcm9kdWN0TW9kZWwuZnJvbUpzb24oTWFwPFN0cmluZywgZHluYW1pYz4ganNvbikgPT4KICAgICAgXyRQcm9kdWN0TW9kZWxGcm9tSnNvbihqc29uKTsKfQo="}, {"name": "summary.md", "type": "text", "content": "# Flutter Product List Performance Diagnosis and Fix\n\n## Problem Description\n\nUser reported significant scrolling lag on the product list page when the data count is large. The core symptom is stuttering/jank during scrolling, especially with hundreds or thousands of products.\n\n---\n\n## Diagnosed Issues (9 total)\n\n### CRITICAL - Issue #1: Using `ListView` instead of `ListView.builder`\n\n**File:** `before_product_list_screen.dart`, line ~98\n\n**Impact:** This is the single biggest performance problem. `ListView(children: [...])` renders ALL items immediately, even those off-screen. With 1000 products, Flutter builds and layouts 1000 widgets even though only ~5-8 are visible.\n\n**Fix:** Replace with `ListView.builder(itemBuilder: ..., itemCount: ...)`. This uses lazy rendering -- only visible items (plus a small cacheExtent buffer) are built.\n\n```dart\n// BEFORE (bad)\nListView(\n  children: [...filtered.map((product) => ProductCard(...))],\n)\n\n// AFTER (good)\nListView.builder(\n  itemCount: products.length,\n  itemBuilder: (context, index) => ProductListItem(product: products[index]),\n)\n```\n\n### CRITICAL - Issue #2: `setState()` on every scroll event\n\n**File:** `before_product_list_screen.dart`, `_onScroll` method\n\n**Impact:** The scroll listener calls `setState(() {})` on every pixel of scroll to toggle the \"scroll to top\" FAB. This triggers a full widget tree rebuild for the entire screen on every frame during scrolling -- catastrophically expensive.\n\n**Fix:** Use `ValueNotifier<bool>` with `ValueListenableBuilder`. Only the FAB widget rebuilds when visibility changes, not the entire screen.\n\n### HIGH - Issue #3: Inline widget builder method (`_buildProductItem`)\n\n**File:** `before_product_list_screen.dart`, `_buildProductItem` method\n\n**Impact:** Building list items as inline methods (not separate Widget classes) means Flutter cannot optimize rebuilds. Every `setState` in the parent forces ALL items to rebuild. With a separate `StatelessWidget`, Flutter can skip items whose props haven't changed.\n\n**Fix:** Extract `ProductListItem` as a standalone `StatelessWidget` class.\n\n### HIGH - Issue #4: Search triggers full rebuild of all items\n\n**File:** `before_product_list_screen.dart`, `onChanged` callback and `_filterProducts`\n\n**Impact:** Typing in the search field calls `setState`, which triggers `_filterProducts` to create a new filtered list, which causes `ListView` to rebuild ALL children. With `ListView.builder`, at least only visible items are rebuilt.\n\n**Fix:** In the optimized version, the search is handled more efficiently because `ListView.builder` only builds visible items. For further optimization, consider debouncing search input and/or using a separate search results provider.\n\n### MEDIUM - Issue #5: No `RepaintBoundary` around list items\n\n**File:** `before_product_list_screen.dart`, `_buildProductItem`\n\n**Impact:** Without `RepaintBoundary`, any visual change in one item (e.g., image loading, animation) forces the entire list to repaint. This is particularly expensive during image loading.\n\n**Fix:** Wrap each `ProductListItem` in `RepaintBoundary`.\n\n### MEDIUM - Issue #6: Images loaded without error handling or caching\n\n**File:** `before_product_list_screen.dart`, `Image.network` in `_buildProductItem`\n\n**Impact:** No error handling for failed URLs, no fade-in animation, no placeholder for null URLs. Failed image loads can cause layout jumps and exceptions.\n\n**Fix:** Extract `_ProductImage` widget with proper `errorBuilder`, `frameBuilder` (fade-in), and null URL handling. In production, use `cached_network_image` package for disk + memory caching.\n\n### MEDIUM - Issue #7: Using deprecated `withOpacity` instead of `withValues`\n\n**File:** `before_product_list_screen.dart`, stock badge colors\n\n**Impact:** `Color.withOpacity()` creates a new color object on every build call and triggers unnecessary repaints due to how Flutter's color comparison works. `withValues(alpha: ...)` is the recommended replacement.\n\n**Fix:** Use `Colors.green.withValues(alpha: 0.1)` instead of `Colors.green.withOpacity(0.1)`.\n\n### LOW - Issue #8: Anonymous closures in build method\n\n**File:** `before_product_list_screen.dart`, `IconButton.onPressed` and `GestureDetector.onTap`\n\n**Impact:** Creating closures inline in `build` means a new function object is created on every rebuild. While Dart's garbage collector handles this well, it adds unnecessary allocation pressure during fast scrolling.\n\n**Fix:** Pass named callbacks (`onTap`, `onAddToCart`) to the extracted widget. Define handler methods in the parent widget.\n\n### LOW - Issue #9: Missing `const` constructors on sub-widgets\n\n**File:** `before_product_list_screen.dart`, various inline widgets\n\n**Impact:** Without `const` constructors, Flutter cannot skip widget rebuilds for static subtrees. Small but cumulative impact.\n\n**Fix:** Extract sub-widgets (`_StockBadge`, `_ErrorView`, `_ProductImage`) with `const` constructors.\n\n---\n\n## Performance Impact Summary\n\n| Optimization | Expected Impact |\n|---|---|\n| `ListView` -> `ListView.builder` | **60-90% memory reduction**, eliminates main scroll jank |\n| Remove `setState` on scroll | **Eliminates full-screen rebuilds** during scroll |\n| Extract item to separate Widget | **Faster rebuilds** via Flutter's widget diffing |\n| Add `RepaintBoundary` | **30-50% less repaint work** during image loading |\n| Fix image handling | **Smoother UX**, fewer layout jumps |\n| Use `withValues` over `withOpacity` | **Marginal** but follows best practices |\n\n## Files in This Output\n\n| File | Description |\n|---|---|\n| `before_product_list_screen.dart` | Original problematic code with inline comments marking each issue |\n| `after_product_list_screen.dart` | Optimized code with all 9 fixes applied |\n| `product_model.dart` | Shared data model (referenced by both versions) |\n| `summary.md` | This diagnosis summary |\n\n## Additional Recommendations\n\n1. **Use `cached_network_image` package** for production image loading with disk + memory caching\n2. **Add pagination** (already supported by the repository pattern) to avoid loading thousands of items at once\n3. **Use `SliverList` with `CustomScrollView`** if you need more complex scroll layouts (sticky headers, grid/list mix)\n4. **Consider `AnimatedList`** if items are frequently added/removed with animations\n5. **Profile with Flutter DevTools** -- use `flutter run --profile` and the \"Performance\" panel to verify improvements\n"}], "grading": {"eval_name": "performance-debug", "configuration": "without_skill", "expectations": [{"text": "uses_listview_builder", "passed": true, "evidence": "Summary Issue #1 explicitly identifies ListView vs ListView.builder as the critical fix. The after file uses ListView.builder with itemCount and itemBuilder (lines 72-89), replacing the plain ListView(children: [...]) pattern from the before file (lines 99-111)."}, {"text": "uses_const_widgets", "passed": true, "evidence": "Summary Issue #9 addresses missing const constructors. The after file extracts _StockBadge, _ErrorView, and _ProductImage as separate widget classes with const constructors (e.g., line 293: 'const _StockBadge', line 321: 'const _ErrorView', line 226: 'const _ProductImage')."}, {"text": "explains_why", "passed": true, "evidence": "The summary provides detailed explanations for each issue. For example, Issue #1 explains: 'ListView(children: [...]) renders ALL items immediately, even those off-screen. With 1000 products, Flutter builds and layouts 1000 widgets even though only ~5-8 are visible.' Issue #3 explains: 'Building list items as inline methods means Flutter cannot optimize rebuilds. Every setState in the parent forces ALL items to rebuild.' Each of the 9 issues includes an Impact section."}, {"text": "suggests_pagination", "passed": true, "evidence": "The Additional Recommendations section states: 'Add pagination (already supported by the repository pattern) to avoid loading thousands of items at once.' (summary.md line 121)"}, {"text": "has_image_caching", "passed": true, "evidence": "Summary Issue #6 mentions: 'In production, use cached_network_image package for disk + memory caching.' The Additional Recommendations also state: 'Use cached_network_image package for production image loading with disk + memory caching.' (summary.md line 120). The after file adds proper errorBuilder, frameBuilder with fade-in, and loadingBuilder as interim improvements."}]}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "flutter-app-dev", "skill_path": "D:/Program/cb-skills/flutter-app-dev", "executor_model": "subagent", "analyzer_model": "subagent", "timestamp": "2026-04-16T11:20:00Z", "iteration": 1}, "runs": [{"eval_name": "todo-app-from-scratch", "configuration": "with_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "time_seconds": 301.8, "assertions": [{"text": "has_project_structure", "passed": true}, {"text": "uses_riverpod", "passed": true}, {"text": "has_crud_operations", "passed": true}, {"text": "has_beginner_explanations", "passed": true}, {"text": "follows_feature_first", "passed": true}]}, {"eval_name": "todo-app-from-scratch", "configuration": "without_skill", "pass_rate": 0.6, "passed": 3, "total": 5, "time_seconds": 185.0, "assertions": [{"text": "has_project_structure", "passed": true}, {"text": "uses_riverpod", "passed": false}, {"text": "has_crud_operations", "passed": true}, {"text": "has_beginner_explanations", "passed": true}, {"text": "follows_feature_first", "passed": false}]}, {"eval_name": "auth-feature", "configuration": "with_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "time_seconds": 310.5, "assertions": [{"text": "has_login_register_screens", "passed": true}, {"text": "uses_dio_for_api", "passed": true}, {"text": "has_token_storage", "passed": true}, {"text": "has_auth_guard", "passed": true}, {"text": "handles_errors", "passed": true}]}, {"eval_name": "auth-feature", "configuration": "without_skill", "pass_rate": 0.8, "passed": 4, "total": 5, "time_seconds": 223.8, "assertions": [{"text": "has_login_register_screens", "passed": true}, {"text": "uses_dio_for_api", "passed": false}, {"text": "has_token_storage", "passed": true}, {"text": "has_auth_guard", "passed": true}, {"text": "handles_errors", "passed": true}]}, {"eval_name": "performance-debug", "configuration": "with_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "time_seconds": 207.4, "assertions": [{"text": "uses_listview_builder", "passed": true}, {"text": "uses_const_widgets", "passed": true}, {"text": "explains_why", "passed": true}, {"text": "suggests_pagination", "passed": true}, {"text": "has_image_caching", "passed": true}]}, {"eval_name": "performance-debug", "configuration": "without_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "time_seconds": 230.6, "assertions": [{"text": "uses_listview_builder", "passed": true}, {"text": "uses_const_widgets", "passed": true}, {"text": "explains_why", "passed": true}, {"text": "suggests_pagination", "passed": true}, {"text": "has_image_caching", "passed": true}]}], "summary": {"with_skill": {"avg_pass_rate": 1.0, "total_passed": 15, "total_assertions": 15, "avg_time_seconds": 273.2}, "without_skill": {"avg_pass_rate": 0.8, "total_passed": 12, "total_assertions": 15, "avg_time_seconds": 213.1}, "delta": {"pass_rate": "+0.20", "time_seconds": "+60.1", "assertions_delta": "+3"}}, "notes": ["Skill provides significant value on architecture and technology choice (Riverpod, Dio, feature-first structure)", "Performance debugging shows skill and baseline are comparable - model already handles this well", "Skill produces more structured output with proper layering (data/domain/presentation)", "Skill takes ~28% longer but produces higher quality, more maintainable code"]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "eval_name": "performance-debug",
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "uses_listview_builder",
+      "passed": true,
+      "evidence": "Summary Issue #1 explicitly identifies ListView vs ListView.builder as the critical fix. The after file uses ListView.builder with itemCount and itemBuilder (lines 72-89), replacing the plain ListView(children: [...]) pattern from the before file (lines 99-111)."
+    },
+    {
+      "text": "uses_const_widgets",
+      "passed": true,
+      "evidence": "Summary Issue #9 addresses missing const constructors. The after file extracts _StockBadge, _ErrorView, and _ProductImage as separate widget classes with const constructors (e.g., line 293: 'const _StockBadge', line 321: 'const _ErrorView', line 226: 'const _ProductImage')."
+    },
+    {
+      "text": "explains_why",
+      "passed": true,
+      "evidence": "The summary provides detailed explanations for each issue. For example, Issue #1 explains: 'ListView(children: [...]) renders ALL items immediately, even those off-screen. With 1000 products, Flutter builds and layouts 1000 widgets even though only ~5-8 are visible.' Issue #3 explains: 'Building list items as inline methods means Flutter cannot optimize rebuilds. Every setState in the parent forces ALL items to rebuild.' Each of the 9 issues includes an Impact section."
+    },
+    {
+      "text": "suggests_pagination",
+      "passed": true,
+      "evidence": "The Additional Recommendations section states: 'Add pagination (already supported by the repository pattern) to avoid loading thousands of items at once.' (summary.md line 121)"
+    },
+    {
+      "text": "has_image_caching",
+      "passed": true,
+      "evidence": "Summary Issue #6 mentions: 'In production, use cached_network_image package for disk + memory caching.' The Additional Recommendations also state: 'Use cached_network_image package for production image loading with disk + memory caching.' (summary.md line 120). The after file adds proper errorBuilder, frameBuilder with fade-in, and loadingBuilder as interim improvements."
+    }
+  ]
+}

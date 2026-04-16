@@ -1,0 +1,31 @@
+{
+  "eval_name": "todo-app-from-scratch",
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "has_project_structure - Does it generate a reasonable project directory structure with lib/, core/, features/ etc.?",
+      "passed": true,
+      "evidence": "Project has a reasonable Flutter directory structure with lib/, lib/models/, lib/screens/, lib/widgets/, test/, plus pubspec.yaml and analysis_options.yaml. It does not have core/ or features/ directories specifically, but the models/screens/widgets organization is a standard and reasonable Flutter project structure."
+    },
+    {
+      "text": "uses_riverpod - Does it use Riverpod for state management?",
+      "passed": false,
+      "evidence": "State management is done entirely with basic setState. pubspec.yaml has no Riverpod dependency. Summary explicitly states: 'Used basic setState for simplicity since the app is small and doesn't need complex state management.'"
+    },
+    {
+      "text": "has_crud_operations - Does it implement add, complete (toggle), and delete operations for todo items?",
+      "passed": true,
+      "evidence": "home_screen.dart contains _addTodo() (inserts new Todo into list), _toggleTodo() (calls todo.toggleComplete()), and _deleteTodo() (removes by id with setState). The Todo model has toggleComplete(). TodoItem widget supports checkbox toggle, swipe-to-dismiss delete, and icon button delete."
+    },
+    {
+      "text": "has_beginner_explanations - Does it include explanations suitable for beginners?",
+      "passed": true,
+      "evidence": "SETUP.md provides step-by-step instructions including prerequisites, quick start with explicit commands (flutter create, flutter pub get, flutter run), project structure explanation, feature list, and troubleshooting. Code files include doc comments like '/// Represents a single todo task', '/// The main home screen displaying the list of todos', '/// Toggle the completion status of the todo'."
+    },
+    {
+      "text": "follows_feature_first - Does it use feature-first directory organization?",
+      "passed": false,
+      "evidence": "The project uses a layer-first (type-first) directory organization: lib/models/, lib/screens/, lib/widgets/. There is no features/ directory or feature-based grouping. Summary confirms: 'Organized into models/, screens/, and widgets/ directories following common Flutter conventions.'"
+    }
+  ]
+}

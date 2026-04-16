@@ -1,0 +1,31 @@
+{
+  "eval_name": "performance-debug",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "uses_listview_builder",
+      "passed": true,
+      "evidence": "summary.md Problem 1 recommends switching to ListView.builder. The after file implements ListView.builder(itemCount: products.length, itemBuilder: ...) in _ProductList widget."
+    },
+    {
+      "text": "uses_const_widgets",
+      "passed": true,
+      "evidence": "summary.md Problem 2 discusses adding const modifiers to stateless widgets. The after file uses const extensively: const _SearchBar(), const _ProductList(), const _ProductListItem(), etc."
+    },
+    {
+      "text": "explains_why",
+      "passed": true,
+      "evidence": "Each problem includes an Impact section explaining why. Problem 1: all 2000 widgets built at once causing long first render, high memory, and low scroll fps. Code comments also explain rationale."
+    },
+    {
+      "text": "suggests_pagination",
+      "passed": true,
+      "evidence": "summary.md additional suggestions item 2: for super large datasets (10000+), suggests pagination with ScrollController to load more on scroll bottom."
+    },
+    {
+      "text": "has_image_caching",
+      "passed": true,
+      "evidence": "summary.md Problem 3: recommends CachedNetworkImage with placeholder and error widget. pubspec.yaml dependency suggestion included: cached_network_image: ^3.3.0."
+    }
+  ]
+}

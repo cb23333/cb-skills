@@ -1,0 +1,31 @@
+{
+  "eval_name": "auth-feature",
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "has_login_register_screens",
+      "passed": true,
+      "evidence": "Both login_screen.dart (class LoginScreen extends StatefulWidget) and register_screen.dart (class RegisterScreen extends StatefulWidget) exist as separate widget files with full form UIs including email, password fields, and navigation between each other."
+    },
+    {
+      "text": "uses_dio_for_api",
+      "passed": false,
+      "evidence": "auth_service.dart uses dart:io HttpClient (import 'dart:io'; final HttpClient _httpClient) instead of the Dio package. The summary explicitly states: 'dart:io HttpClient for network requests (no extra HTTP package dependency)'."
+    },
+    {
+      "text": "has_token_storage",
+      "passed": true,
+      "evidence": "auth_provider.dart imports shared_preferences and implements _persistToken() which calls SharedPreferences.getInstance() and prefs.setString('auth_token', token), as well as tryAutoLogin() which reads the saved token and _clearPersistedToken() which removes it."
+    },
+    {
+      "text": "has_auth_guard",
+      "passed": true,
+      "evidence": "auth_wrapper.dart implements AuthWrapper widget that checks authProvider.isAuthenticated to decide whether to show the homeScreen or LoginScreen. It also calls tryAutoLogin() in initState to restore sessions on app start, and shows a loading spinner during initialization."
+    },
+    {
+      "text": "handles_errors",
+      "passed": true,
+      "evidence": "auth_provider.dart tracks _isLoading, _error, and success (return bool) states. Login/register methods use try/catch blocks handling AuthException (e.message) and generic exceptions ('An unexpected error occurred'). Both screens show SnackBar with error messages on failure and display CircularProgressIndicator during loading."
+    }
+  ]
+}

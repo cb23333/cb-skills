@@ -1,0 +1,31 @@
+{
+  "eval_name": "auth-feature",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "has_login_register_screens",
+      "passed": true,
+      "evidence": "Two separate screen widgets exist: LoginScreen in presentation/login_screen.dart with email/password form, and RegisterScreen in presentation/register_screen.dart with name/email/password/confirm fields. Both extend ConsumerStatefulWidget."
+    },
+    {
+      "text": "uses_dio_for_api",
+      "passed": true,
+      "evidence": "api_client.dart provides a configured Dio instance via dioProvider with BaseOptions and AuthInterceptor. AuthRepository in auth_repository.dart uses Dio for all HTTP calls: _dio.post('/auth/login', ...), _dio.post('/auth/register', ...), _dio.get('/auth/me'), _dio.post('/auth/logout')."
+    },
+    {
+      "text": "has_token_storage",
+      "passed": true,
+      "evidence": "core/storage/local_storage.dart implements a LocalStorage class using SharedPreferences with getToken(), saveToken(), deleteToken(), getRefreshToken(), and saveRefreshToken() methods. AuthNotifier reads and persists tokens via the StorageService interface."
+    },
+    {
+      "text": "has_auth_guard",
+      "passed": true,
+      "evidence": "app_router.dart uses GoRouter with a redirect callback: 'if (!isLoggedIn && !isAuthRoute) return \"/login\"' redirects unauthenticated users to login, and 'if (isLoggedIn && isAuthRoute) return \"/\"' redirects authenticated users away from auth pages. A 401 response in AuthInterceptor also triggers logout."
+    },
+    {
+      "text": "handles_errors",
+      "passed": true,
+      "evidence": "Loading: both screens check authAsync.isLoading to disable buttons and show CircularProgressIndicator. Error: screens use ref.listen to show SnackBar on errors; api_exceptions.dart maps all DioExceptionType variants and HTTP status codes (400-500) to user-friendly messages. Success: AsyncValue.guard in AuthNotifier wraps login/register calls, transitioning state to authenticated on success."
+    }
+  ]
+}

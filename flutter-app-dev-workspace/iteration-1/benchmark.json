@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "skill_name": "flutter-app-dev",
+    "skill_path": "D:/Program/cb-skills/flutter-app-dev",
+    "executor_model": "subagent",
+    "analyzer_model": "subagent",
+    "timestamp": "2026-04-16T11:20:00Z",
+    "iteration": 1
+  },
+  "runs": [
+    {
+      "eval_name": "todo-app-from-scratch",
+      "configuration": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "time_seconds": 301.8,
+      "assertions": [
+        {"text": "has_project_structure", "passed": true},
+        {"text": "uses_riverpod", "passed": true},
+        {"text": "has_crud_operations", "passed": true},
+        {"text": "has_beginner_explanations", "passed": true},
+        {"text": "follows_feature_first", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "todo-app-from-scratch",
+      "configuration": "without_skill",
+      "pass_rate": 0.6,
+      "passed": 3,
+      "total": 5,
+      "time_seconds": 185.0,
+      "assertions": [
+        {"text": "has_project_structure", "passed": true},
+        {"text": "uses_riverpod", "passed": false},
+        {"text": "has_crud_operations", "passed": true},
+        {"text": "has_beginner_explanations", "passed": true},
+        {"text": "follows_feature_first", "passed": false}
+      ]
+    },
+    {
+      "eval_name": "auth-feature",
+      "configuration": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "time_seconds": 310.5,
+      "assertions": [
+        {"text": "has_login_register_screens", "passed": true},
+        {"text": "uses_dio_for_api", "passed": true},
+        {"text": "has_token_storage", "passed": true},
+        {"text": "has_auth_guard", "passed": true},
+        {"text": "handles_errors", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "auth-feature",
+      "configuration": "without_skill",
+      "pass_rate": 0.8,
+      "passed": 4,
+      "total": 5,
+      "time_seconds": 223.8,
+      "assertions": [
+        {"text": "has_login_register_screens", "passed": true},
+        {"text": "uses_dio_for_api", "passed": false},
+        {"text": "has_token_storage", "passed": true},
+        {"text": "has_auth_guard", "passed": true},
+        {"text": "handles_errors", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "performance-debug",
+      "configuration": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "time_seconds": 207.4,
+      "assertions": [
+        {"text": "uses_listview_builder", "passed": true},
+        {"text": "uses_const_widgets", "passed": true},
+        {"text": "explains_why", "passed": true},
+        {"text": "suggests_pagination", "passed": true},
+        {"text": "has_image_caching", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "performance-debug",
+      "configuration": "without_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "time_seconds": 230.6,
+      "assertions": [
+        {"text": "uses_listview_builder", "passed": true},
+        {"text": "uses_const_widgets", "passed": true},
+        {"text": "explains_why", "passed": true},
+        {"text": "suggests_pagination", "passed": true},
+        {"text": "has_image_caching", "passed": true}
+      ]
+    }
+  ],
+  "summary": {
+    "with_skill": {
+      "avg_pass_rate": 1.0,
+      "total_passed": 15,
+      "total_assertions": 15,
+      "avg_time_seconds": 273.2
+    },
+    "without_skill": {
+      "avg_pass_rate": 0.8,
+      "total_passed": 12,
+      "total_assertions": 15,
+      "avg_time_seconds": 213.1
+    },
+    "delta": {
+      "pass_rate": "+0.20",
+      "time_seconds": "+60.1",
+      "assertions_delta": "+3"
+    }
+  },
+  "notes": [
+    "Skill provides significant value on architecture and technology choice (Riverpod, Dio, feature-first structure)",
+    "Performance debugging shows skill and baseline are comparable - model already handles this well",
+    "Skill produces more structured output with proper layering (data/domain/presentation)",
+    "Skill takes ~28% longer but produces higher quality, more maintainable code"
+  ]
+}
