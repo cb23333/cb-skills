@@ -8,6 +8,7 @@ A curated collection of high-quality skills for AI coding assistants. Each skill
 |-------|-------------|--------|
 | [flutter-app-dev](./flutter-app-dev) | End-to-end Flutter mobile app development | Available |
 | [kali-security](./kali-security) | Kali Linux security testing & penetration testing | Available |
+| [moments-copy](./moments-copy) | 朋友圈文案生成器，根据场景/心情/事件生成多种风格短文案 | Available |
 
 ## What is a Skill?
 
@@ -44,6 +45,15 @@ Professional security testing workflow covering:
 Enforces authorized-use-only principles with built-in authorization checks.
 
 References: `reconnaissance.md`, `web-testing.md`, `password-attacks.md`, `wireless-testing.md`, `exploitation.md`, `post-exploitation.md`, `forensics.md`, `reporting.md`
+
+### moments-copy
+
+朋友圈文案生成器，支持自由描述和结构化输入，根据场景、心情、事件等信息生成多种风格的朋友圈短文案：
+
+- 12 种文案风格：文艺清新、诗意文案、日常碎碎念、简洁高级、幽默轻松、温馨治愈、旅行记录、美食打卡、情感感悟、萌宠日记、运动/健身、节日/纪念日
+- 混合输入模式：自由描述或结构化字段
+- 每次输出 3-5 条不同风格文案（20-150字）
+- 支持交互式调整风格、字数、语气
 
 ## Usage
 
