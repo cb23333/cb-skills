@@ -9,6 +9,8 @@ A curated collection of high-quality skills for AI coding assistants. Each skill
 | [flutter-app-dev](./flutter-app-dev) | End-to-end Flutter mobile app development | Available |
 | [kali-security](./kali-security) | Kali Linux security testing & penetration testing | Available |
 | [moments-copy](./moments-copy) | 朋友圈文案生成器，根据场景/心情/事件生成多种风格短文案 | Available |
+| [cs-exam-solver](./cs-exam-solver) | 计算机考试题目截图识别与解答（单选/多选/判断题） | Available |
+| [report-writing](./report-writing) | 汇报稿撰写专家，覆盖各类正式汇报文稿 | Available |
 
 ## What is a Skill?
 
@@ -54,6 +56,22 @@ References: `reconnaissance.md`, `web-testing.md`, `password-attacks.md`, `wirel
 - 混合输入模式：自由描述或结构化字段
 - 每次输出 3-5 条不同风格文案（20-150字）
 - 支持交互式调整风格、字数、语气
+
+### cs-exam-solver
+
+计算机考试题目截图识别与解答，上传题目截图即可快速获取答案：
+
+- 支持题型：单选题、多选题、判断题
+- 覆盖全部计算机科目：数据结构、操作系统、计算机网络、组成原理、数据库、软件工程、编译原理、算法、离散数学、AI、网络安全、编程语言等
+- 答案表格 + 简短解题要点，高效准确
+- 中英文题目均可处理
+
+### report-writing
+
+汇报稿撰写专家，根据工作要点、素材或草稿撰写各类正式汇报文稿并输出 Word 文档：
+
+- 覆盖全部汇报类型：工作总结、述职报告、项目总结、年终总结、竞聘报告、调研报告、经验交流发言、对照检查材料等
+- 适用于政府机关、国企、事业单位等工作场景
 
 ## Usage
 
