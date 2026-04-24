@@ -11,6 +11,8 @@ A curated collection of high-quality skills for AI coding assistants. Each skill
 | [moments-copy](./moments-copy) | 朋友圈文案生成器，根据场景/心情/事件生成多种风格短文案 | Available |
 | [cs-exam-solver](./cs-exam-solver) | 计算机考试题目截图识别与解答（单选/多选/判断题） | Available |
 | [report-writing](./report-writing) | 汇报稿撰写专家，覆盖各类正式汇报文稿 | Available |
+| [authorized-pentest](./authorized-pentest) | 授权渗透测试上下文框架，帮助安全专业人员规范描述授权上下文 | Available |
+| [ctf-windows](./ctf-windows) | Windows CTF 挑战解题指南 | Available |
 
 ## What is a Skill?
 
@@ -72,6 +74,22 @@ References: `reconnaissance.md`, `web-testing.md`, `password-attacks.md`, `wirel
 
 - 覆盖全部汇报类型：工作总结、述职报告、项目总结、年终总结、竞聘报告、调研报告、经验交流发言、对照检查材料等
 - 适用于政府机关、国企、事业单位等工作场景
+
+### authorized-pentest
+
+授权渗透测试上下文框架引导，帮助安全专业人员在与 AI 协作时规范描述授权上下文：
+
+- 结构化授权上下文模板（Quick Context Block）
+- 4 种请求框架策略（授权优先、方法论关联、防御目标、阶段语言）
+- 各测试阶段现成模板（侦察、扫描、Web 测试、漏洞利用、后渗透、报告）
+- 术语替换表（关键词专业化引导）
+- AI 拒绝时的应对方法（补充上下文而非隐藏意图）
+
+References: `context-templates.md`
+
+### ctf-windows
+
+Windows CTF 挑战解题指南，覆盖 Windows 环境下的常见 CTF 题型和解题方法论。
 
 ## Usage
 
