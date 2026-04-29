@@ -9,6 +9,7 @@ A curated collection of high-quality skills for AI coding assistants. Each skill
 | [flutter-app-dev](./flutter-app-dev) | End-to-end Flutter mobile app development | Available |
 | [kali-security](./kali-security) | Kali Linux security testing & penetration testing | Available |
 | [moments-copy](./moments-copy) | 朋友圈文案生成器，根据场景/心情/事件生成多种风格短文案 | Available |
+| [photo-doodle](./photo-doodle) | 照片手绘涂鸦标注，给照片加手绘风格中文注释 | Available |
 
 ## What is a Skill?
 
