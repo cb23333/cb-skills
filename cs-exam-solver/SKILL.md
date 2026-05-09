@@ -84,6 +84,32 @@ description: 计算机考试题目截图识别与解答。上传包含计算机�
 - **自然语言处理（NLP）**：分词与词性标注、命名实体识别（NER）、文本分类、情感分析、序列标注、词向量（Word2Vec/GloVe/FastText）、文本生成、机器翻译、问答系统
 - **计算机视觉（CV）**：图像分类、目标检测（YOLO/SSD/Faster R-CNN）、图像分割（语义/实例）、人脸识别、OCR文字识别、GAN与图像生成、视觉Transformer（ViT）
 
+## 自动化工具
+
+项目提供了 `solve.py` 自动化解题脚本，支持从试卷HTML一键提取图片并调用AI API自动解题。
+
+### 使用方式
+
+```bash
+# 仅提取图片（不需要API Key）
+python solve.py quiz_xxx.html --extract-only
+
+# 完整自动解题（需要 OpenAI 兼容 API）
+python solve.py quiz_xxx.html --api-key sk-xxx --model gpt-4o
+
+# 使用环境变量
+export OPENAI_API_KEY=sk-xxx
+export OPENAI_BASE_URL=https://api.openai.com/v1  # 可选，默认 OpenAI
+python solve.py quiz_xxx.html
+```
+
+### 输出
+
+- `{name}_extracted/` — 每道题的单独图片
+- `{name}_extracted/composite/` — 每道题的合成图（题干+选项拼接）
+- `{name}_answers.json` — API 解题结果
+- `{name}_fill.js` — 浏览器控制台自动填答脚本
+
 ## 注意事项
 
 - **准确性优先**：宁可标注"不确定"也不要瞎猜。如果对某题没有把握，在答案后标注 ⚠️ 并简述理由
